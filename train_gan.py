@@ -2,7 +2,6 @@ import tensorflow as tf
 tfgan = tf.contrib.gan
 layers = tf.contrib.layers
 import numpy as np
-import tf_util
 import argparse
 import provider
 import importlib
