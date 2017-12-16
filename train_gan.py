@@ -6,11 +6,16 @@ import argparse
 import provider
 import importlib
 import h5py
+import os
+import sys
 from tensorflow.python.ops import variable_scope
 from tensorflow.contrib.gan.python.losses.python import tuple_losses_impl as tfgan_losses
 from tensorflow.contrib.data import Dataset, Iterator
 
-
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(BASE_DIR)
+sys.path.append(os.path.join(BASE_DIR, 'models'))
+sys.path.append(os.path.join(BASE_DIR, 'utils'))
 parser = argparse.ArgumentParser()
 parser.add_argument('--gpu', type=int, default=0, help='GPU to use [default: GPU 0]')
 parser.add_argument('--model', default='pointnet_cls', help='Model name: pointnet_cls or pointnet_cls_basic [default: pointnet_cls]')
