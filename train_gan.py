@@ -118,8 +118,9 @@ def generate_cloud(feature, noise):
     point = layers.fully_connected(feature, 256)
     point = layers.fully_connected(point, 64)
     point = layers.fully_connected(point, 32)
-    point = layers.fully_connected(point, 16)
-    point = layers.fully_connected(point, 3)
+    point = layers.fully_connected(point, 16, activation_fn=tf.nn.softsing)
+    point = layers.fully_connected(point, 3, activation_fn=tf.nn.softsing)
+
     return point
 
 
