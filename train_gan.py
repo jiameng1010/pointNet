@@ -55,29 +55,30 @@ def get_bn_decay(batch):
     return bn_decay
 
 def provide_data():
-    BATCH_SIZE = 32
-    current_data, current_label = provider.loadDataFile('./data/modelnet40_ply_hdf5_2048/train_all.h5')
-    current_data, current_label, _ = provider.shuffle_data(current_data, np.squeeze(current_label))
-    current_label = np.squeeze(current_label)
+    while(True):
+        BATCH_SIZE = 32
+        current_data, current_label = provider.loadDataFile('./data/modelnet40_ply_hdf5_2048/train_all.h5')
+        current_data, current_label, _ = provider.shuffle_data(current_data, np.squeeze(current_label))
+        current_label = np.squeeze(current_label)
 
 
-    file_size = current_data.shape[0]
-    num_batches = file_size // BATCH_SIZE
+        file_size = current_data.shape[0]
+        num_batches = file_size // BATCH_SIZE
 
-    for batch_idx in range(num_batches):
-        start_idx = batch_idx * BATCH_SIZE
-        end_idx = (batch_idx + 1) * BATCH_SIZE
+        for batch_idx in range(num_batches):
+            start_idx = batch_idx * BATCH_SIZE
+            end_idx = (batch_idx + 1) * BATCH_SIZE
 
-        # mantipulation data
-        rotated_data = provider.rotate_point_cloud(current_data[start_idx:end_idx, :, :])
-        jittered_data = provider.jitter_point_cloud(rotated_data)
-        # mantipulate labe
-        one_hot_labe = np.zeros((BATCH_SIZE, 40))
-        one_hot_labe[np.arange(BATCH_SIZE), current_label[start_idx:end_idx]] = 1
+            # mantipulation data
+            rotated_data = provider.rotate_point_cloud(current_data[start_idx:end_idx, :, :])
+            jittered_data = provider.jitter_point_cloud(rotated_data)
+            # mantipulate labe
+            one_hot_labe = np.zeros((BATCH_SIZE, 40))
+            one_hot_labe[np.arange(BATCH_SIZE), current_label[start_idx:end_idx]] = 1
 
-        #out['data'] = jittered_data
-        #out['labe'] = one_hot_labe
-        yield jittered_data, one_hot_labe
+            #out['data'] = jittered_data
+            #out['labe'] = one_hot_labe
+            yield jittered_data, one_hot_labe
 
 
 def conditional_discriminator(point_clouds, one_hot_labels):
@@ -182,8 +183,6 @@ train_ops = tfgan.gan_train_ops(
     generator_optimizer=tf.train.AdamOptimizer(gen_lr, 0.5),
     discriminator_optimizer=tf.train.AdamOptimizer(dis_lr, 0.5))
 
-demo = gan_model.generated_data
-
 status_message = tf.string_join(
     ['Starting train step: ',
      tf.as_string(tf.train.get_or_create_global_step())],
@@ -191,17 +190,22 @@ status_message = tf.string_join(
 
 
 demo_hook = tf.train.FinalOpsHook(final_ops=gan_model.generated_data)
+g_loss_hook = tf.train.FinalOpsHook(final_ops=gan_loss[0])
+d_loss_hook = tf.train.FinalOpsHook(final_ops=gan_loss[1])
 for i in range(500):
-    loss = tfgan.gan_train(train_ops,
+    step_count = tfgan.gan_train(train_ops,
                            hooks=[tf.train.StopAtStepHook(num_steps=FLAGS.max_number_of_steps),
                                   demo_hook],
                            logdir='./log/gan_log/')
-    print(loss)
+    print(step_count)
     generated_demos = demo_hook.final_ops_values
     savefilename = './log/gan_log/demo' + str(i) + '.h5'
     h5r = h5py.File(savefilename, 'w')
     h5r.create_dataset('data', data=generated_demos)
     h5r.close()
+    g_loss = g_loss_hook.final_ops_values
+    d_loss = d_loss_hook.final_ops_values
+    print(g_loss + '    ' + d_loss)
 #with tf.variable_scope('Generator'):
 
 print('Done!')
