@@ -8,6 +8,8 @@ import importlib
 import h5py
 import os
 import sys
+import tf_util
+from transform_nets import input_transform_net, feature_transform_net
 from tensorflow.python.ops import variable_scope
 from tensorflow.contrib.gan.python.losses.python import tuple_losses_impl as tfgan_losses
 from tensorflow.contrib.data import Dataset, Iterator
@@ -80,6 +82,63 @@ def provide_data():
             #out['labe'] = one_hot_labe
             yield jittered_data, one_hot_labe
 
+def get_model(point_cloud, is_training, one_hot_labels, bn_decay=None,):
+    """ Classification PointNet, input is BxNx3, output Bx40 """
+    batch_size = point_cloud.get_shape()[0].value
+    num_point = point_cloud.get_shape()[1].value
+    end_points = {}
+
+    with tf.variable_scope('transform_net1', reuse=tf.AUTO_REUSE) as sc:
+        transform = input_transform_net(point_cloud, is_training, bn_decay, K=3)
+    point_cloud_transformed = tf.matmul(point_cloud, transform)
+    input_image = tf.expand_dims(point_cloud_transformed, -1)
+
+    net = tf_util.conv2d(input_image, 64, [1,3],
+                         padding='VALID', stride=[1,1],
+                         bn=True, is_training=is_training,
+                         scope='conv1', bn_decay=bn_decay)
+    net = tfgan.features.condition_tensor_from_onehot(net, one_hot_labels)
+    net = tf_util.conv2d(net, 64, [1,1],
+                         padding='VALID', stride=[1,1],
+                         bn=True, is_training=is_training,
+                         scope='conv2', bn_decay=bn_decay)
+
+    with tf.variable_scope('transform_net2', reuse=tf.AUTO_REUSE) as sc:
+        transform = feature_transform_net(net, is_training, bn_decay, K=64)
+    end_points['transform'] = transform
+    net_transformed = tf.matmul(tf.squeeze(net, axis=[2]), transform)
+    net_transformed = tf.expand_dims(net_transformed, [2])
+
+    net = tf_util.conv2d(net_transformed, 64, [1,1],
+                         padding='VALID', stride=[1,1],
+                         bn=True, is_training=is_training,
+                         scope='conv3', bn_decay=bn_decay)
+    net = tfgan.features.condition_tensor_from_onehot(net, one_hot_labels)
+    net = tf_util.conv2d(net, 128, [1,1],
+                         padding='VALID', stride=[1,1],
+                         bn=True, is_training=is_training,
+                         scope='conv4', bn_decay=bn_decay)
+    net = tf_util.conv2d(net, 1024, [1,1],
+                         padding='VALID', stride=[1,1],
+                         bn=True, is_training=is_training,
+                         scope='conv5', bn_decay=bn_decay)
+
+    # Symmetric function: max pooling
+    net = tf_util.max_pool2d(net, [num_point,1],
+                             padding='VALID', scope='maxpool')
+
+    net = tf.reshape(net, [batch_size, -1])
+    net = tf_util.fully_connected(net, 512, bn=True, is_training=is_training,
+                                  scope='fc1', bn_decay=bn_decay)
+    net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
+                          scope='dp1')
+    net = tf_util.fully_connected(net, 256, bn=True, is_training=is_training,
+                                  scope='fc2', bn_decay=bn_decay)
+    net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
+                          scope='dp2')
+    net = tf_util.fully_connected(net, 40, activation_fn=None, scope='fc3')
+
+    return net, end_points
 
 def conditional_discriminator(point_clouds, one_hot_labels):
     batch = tf.constant([32])#tf.Variable(0)
@@ -89,8 +148,8 @@ def conditional_discriminator(point_clouds, one_hot_labels):
 
     # Get model and loss
     with tf.variable_scope('discriminator', reuse=tf.AUTO_REUSE):
-        pred, end_points = MODEL.get_model(point_clouds, tf.squeeze(is_training_pl), bn_decay=tf.squeeze(bn_decay))
-    return layers.fully_connected(pred, 1)
+        pred, end_points = get_model(point_clouds, tf.squeeze(is_training_pl), one_hot_labels[1])
+        return layers.fully_connected(pred, 1, activation_fn=tf.nn.softmax)
 
 def generate_cloud(feature, noise):
     feature = tf.concat([feature, feature], axis=1)#2
@@ -149,7 +208,6 @@ def conditional_generator(inputs):
 ######################################### main #############################################
 ######################################### main #############################################
 
-
 cloud_provider = tf.data.Dataset.from_generator(provide_data, output_types=(tf.float32, tf.float32), \
                                                 output_shapes=(tf.TensorShape([32, 1024, 3]), tf.TensorShape([32,40])))
 point_clouds, cloud_labels = cloud_provider.make_one_shot_iterator().get_next()
@@ -169,9 +227,10 @@ gan_model = tfgan.gan_model(
 # Build the GAN loss.
 gan_loss = tfgan.gan_loss(
     gan_model,
-    gradient_penalty_weight=1.0,
-    #generator_loss_fn=tfgan_losses.least_squares_generator_loss,
-    #discriminator_loss_fn=tfgan_losses.least_squares_discriminator_loss,
+    #gradient_penalty_weight=1.0,
+    #mutual_information_penalty_weight=0.0,
+    generator_loss_fn=tfgan_losses.wasserstein_generator_loss,
+    discriminator_loss_fn=tfgan_losses.wasserstein_discriminator_loss,
     add_summaries=True)
 
 
@@ -184,10 +243,10 @@ train_ops = tfgan.gan_train_ops(
     generator_optimizer=tf.train.AdamOptimizer(gen_lr, 0.5),
     discriminator_optimizer=tf.train.AdamOptimizer(dis_lr, 0.5))
 
-#status_message = tf.string_join(
-#    ['Starting train step: ',
-#     tf.as_string(tf.train.get_or_create_global_step())],
-#    name='status_message')
+status_message = tf.string_join(
+    ['Starting train step: ',
+     tf.as_string(tf.train.get_or_create_global_step())],
+    name='status_message')
 
 
 demo_hook = tf.train.FinalOpsHook(final_ops=gan_model.generated_data)
