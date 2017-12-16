@@ -169,8 +169,8 @@ gan_model = tfgan.gan_model(
 # Build the GAN loss.
 gan_loss = tfgan.gan_loss(
     gan_model,
-    generator_loss_fn=tfgan_losses.minimax_generator_loss,
-    discriminator_loss_fn=tfgan_losses.minimax_discriminator_loss,
+    generator_loss_fn=tfgan_losses.modified_generator_loss,
+    discriminator_loss_fn=tfgan_losses.modified_discriminator_loss,
     add_summaries=True)
 
 
