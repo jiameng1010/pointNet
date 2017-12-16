@@ -205,7 +205,7 @@ for i in range(500):
     h5r.close()
     g_loss = g_loss_hook.final_ops_values
     d_loss = d_loss_hook.final_ops_values
-    print(g_loss + '    ' + d_loss)
+    print(str(g_loss) + '    ' + str(d_loss))
 #with tf.variable_scope('Generator'):
 
 print('Done!')
