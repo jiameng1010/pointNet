@@ -169,8 +169,9 @@ gan_model = tfgan.gan_model(
 # Build the GAN loss.
 gan_loss = tfgan.gan_loss(
     gan_model,
-    generator_loss_fn=tfgan_losses.least_squares_generator_loss,
-    discriminator_loss_fn=tfgan_losses.least_squares_discriminator_loss,
+    gradient_penalty_weight=1.0,
+    #generator_loss_fn=tfgan_losses.least_squares_generator_loss,
+    #discriminator_loss_fn=tfgan_losses.least_squares_discriminator_loss,
     add_summaries=True)
 
 
@@ -183,10 +184,10 @@ train_ops = tfgan.gan_train_ops(
     generator_optimizer=tf.train.AdamOptimizer(gen_lr, 0.5),
     discriminator_optimizer=tf.train.AdamOptimizer(dis_lr, 0.5))
 
-status_message = tf.string_join(
-    ['Starting train step: ',
-     tf.as_string(tf.train.get_or_create_global_step())],
-    name='status_message')
+#status_message = tf.string_join(
+#    ['Starting train step: ',
+#     tf.as_string(tf.train.get_or_create_global_step())],
+#    name='status_message')
 
 
 demo_hook = tf.train.FinalOpsHook(final_ops=gan_model.generated_data)
