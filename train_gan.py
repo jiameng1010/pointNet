@@ -228,10 +228,10 @@ gan_model = tfgan.gan_model(
 # Build the GAN loss.
 gan_loss = tfgan.gan_loss(
     gan_model,
-    #gradient_penalty_weight=1.0,
-    #mutual_information_penalty_weight=0.0,
-    generator_loss_fn=tfgan_losses.wasserstein_generator_loss,
-    discriminator_loss_fn=tfgan_losses.wasserstein_discriminator_loss,
+    gradient_penalty_weight=1.0,
+    mutual_information_penalty_weight=0.0,
+    #generator_loss_fn=tfgan_losses.wasserstein_generator_loss,
+    #discriminator_loss_fn=tfgan_losses.wasserstein_discriminator_loss,
     add_summaries=True)
 
 
