@@ -30,7 +30,7 @@ parser.add_argument('--decay_step', type=int, default=200000, help='Decay step f
 parser.add_argument('--decay_rate', type=float, default=0.7, help='Decay rate for lr decay [default: 0.8]')
 FLAGS = parser.parse_args()
 FLAGS.noise_dims = 128
-FLAGS.max_number_of_steps = 150
+FLAGS.max_number_of_steps = 120
 
 MAX_NUM_POINT = 2048
 NUM_CLASSES = 40
@@ -191,7 +191,7 @@ status_message = tf.string_join(
 
 
 demo_hook = tf.train.FinalOpsHook(final_ops=gan_model.generated_data)
-for i in range(100):
+for i in range(500):
     loss = tfgan.gan_train(train_ops,
                            hooks=[tf.train.StopAtStepHook(num_steps=FLAGS.max_number_of_steps),
                                   demo_hook],
