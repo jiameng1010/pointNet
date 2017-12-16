@@ -114,7 +114,7 @@ def get_model(point_cloud, is_training, one_hot_labels, bn_decay=None,):
                          padding='VALID', stride=[1,1],
                          bn=True, is_training=is_training,
                          scope='conv3', bn_decay=bn_decay)
-    net = tfgan.features.condition_tensor_from_onehot(net, one_hot_labels)
+    #net = tfgan.features.condition_tensor_from_onehot(net, one_hot_labels)
     net = tf_util.conv2d(net, 128, [1,1],
                          padding='VALID', stride=[1,1],
                          bn=True, is_training=is_training,
@@ -230,8 +230,8 @@ gan_loss = tfgan.gan_loss(
     gan_model,
     #gradient_penalty_weight=1.0,
     #mutual_information_penalty_weight=0.0,
-    generator_loss_fn=tfgan_losses.wasserstein_generator_loss,
-    discriminator_loss_fn=tfgan_losses.wasserstein_discriminator_loss,
+    generator_loss_fn=tfgan_losses.minimax_generator_loss,
+    discriminator_loss_fn=tfgan_losses.minimax_discriminator_loss,
     add_summaries=True)
 
 
