@@ -8,7 +8,7 @@ import importlib
 import h5py
 import os
 import sys
-import tf_util
+
 from transform_nets import input_transform_net, feature_transform_net
 from tensorflow.python.ops import variable_scope
 from tensorflow.contrib.gan.python.losses.python import tuple_losses_impl as tfgan_losses
@@ -18,6 +18,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(BASE_DIR)
 sys.path.append(os.path.join(BASE_DIR, 'models'))
 sys.path.append(os.path.join(BASE_DIR, 'utils'))
+import tf_util
 parser = argparse.ArgumentParser()
 parser.add_argument('--gpu', type=int, default=0, help='GPU to use [default: GPU 0]')
 parser.add_argument('--model', default='pointnet_cls', help='Model name: pointnet_cls or pointnet_cls_basic [default: pointnet_cls]')
