@@ -248,8 +248,8 @@ def train():
     with tf.variable_scope('Generator'):
         G_input = noise, cloud_labelsG
         G_output = conditional_generator(G_input)
-        D_output_trainG = conditional_discriminator(G_output, cloud_labelsG)
     with tf.variable_scope('Discriminator'):
+        D_output_trainG = conditional_discriminator(G_output, cloud_labelsG)
         D_input1_trainD = tf.concat([point_cloudsD, G_output], axis=0)
         D_input2_trainD = tf.concat([cloud_labelsD, cloud_labelsG], axis=0)
         D_output_trainD = conditional_discriminator(D_input1_trainD, D_input2_trainD)
