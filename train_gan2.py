@@ -315,7 +315,7 @@ def trainG(sess, ops, train_writer):
                                                     feed_dict=feed_dict)
         train_writer.add_summary(summary, step)
         loss_sum += loss
-        log_string('total lossG: %f' % loss_sum)
+    log_string('total lossG: %f' % loss_sum)
 
 def trainD(sess, ops, train_writer):
     feed_dict = {ops['labels_plG']: np.ones(shape=(BATCH_SIZE, 1), dtype=float),
@@ -328,7 +328,7 @@ def trainD(sess, ops, train_writer):
                                                     feed_dict=feed_dict)
         train_writer.add_summary(summary, step)
         loss_sum += loss
-        log_string('total lossD: %f' % loss_sum)
+    log_string('total lossD: %f' % loss_sum)
 
 if __name__ == "__main__":
     train()
