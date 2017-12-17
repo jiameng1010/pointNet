@@ -232,20 +232,10 @@ def train():
     stepsD = tf.Variable(0)
 
     ## setup input data
-    cloud_provider = tf.data.Dataset.from_generator(provide_data, output_types=(tf.float32, tf.float32), \
-                                                    output_shapes=(
-                                                    tf.TensorShape([32, 1024, 3]), tf.TensorShape([32, 40])))
-    cloud_provider2 = tf.data.Dataset.from_generator(provide_data, output_types=(tf.float32, tf.float32), \
-                                                    output_shapes=(
-                                                    tf.TensorShape([32, 1024, 3]), tf.TensorShape([32, 40])))
-    point_cloudsG, cloud_labelsG = cloud_provider.make_one_shot_iterator().get_next()
-    point_cloudsD, cloud_labelsD = cloud_provider2.make_one_shot_iterator().get_next()
-    iterator1 = Iterator.from_structure(cloud_provider.output_types,
-                                       cloud_provider.output_shapes)
-    training_init_op1 = iterator1.make_initializer(cloud_provider)
-    iterator2 = Iterator.from_structure(cloud_provider.output_types,
-                                       cloud_provider.output_shapes)
-    training_init_op2 = iterator2.make_initializer(cloud_provider)
+    point_cloudsG = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 1024, 3))
+    cloud_labelsG = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 40))
+    point_cloudsD = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 1024, 3))
+    cloud_labelsD = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 40))
     noise = tf.random_normal([FLAGS.batch_size, FLAGS.noise_dims])
     gt_trainD = tf.placeholder(tf.int32, shape=(2*FLAGS.batch_size, 1))
     gt_trainG = tf.placeholder(tf.int32, shape=(FLAGS.batch_size, 1))
@@ -297,10 +287,11 @@ def train():
                 'train_opD': train_opD,
                 'merged': merged,
                 'stepG': stepsG,
-                'stepD': stepsD}
+                'stepD': stepsD,
+                'cloud_labelsG': cloud_labelsG,
+                'point_cloudsD': point_cloudsD,
+                'cloud_labelsD': cloud_labelsD}
         # initialize the iterator and variable on the training data
-        sess.run(training_init_op1)
-        sess.run(training_init_op2)
         init = tf.global_variables_initializer()
         sess.run(init)
 
@@ -312,19 +303,23 @@ def train():
         print('Done!')
 
 def trainG(sess, ops, train_writer):
-    feed_dict = {ops['labels_plG']: np.ones(shape=(BATCH_SIZE, 1), dtype=float),
-                 ops['labels_plD']: np.concatenate((np.ones(shape=(BATCH_SIZE, 1), dtype=float),
-                                                    np.zeros(shape=(BATCH_SIZE, 1), dtype=float)), axis=0)}
+    generator = provider()
     loss_sumG = 0
     loss_sumD = 0
-    for i in range(200):
+    for data in generator:
+        feed_dict = {ops['labels_plG']: np.ones(shape=(BATCH_SIZE, 1), dtype=float),
+                     ops['labels_plD']: np.concatenate((np.ones(shape=(BATCH_SIZE, 1), dtype=float),
+                                                        np.zeros(shape=(BATCH_SIZE, 1), dtype=float)), axis=0),
+                     ops['cloud_labelsG']: data[1],
+                     ops['cloud_labelsD']: data[1],
+                     ops['point_cloudsD']: data[0]}
         summary, step, _, lossG, lossD, pred_val = sess.run([ops['merged'], ops['stepG'],
                                                              ops['train_opG'], ops['lossG'], ops['lossD'], ops['predG']],
                                                             feed_dict=feed_dict)
         train_writer.add_summary(summary, step)
         loss_sumG += lossG
         loss_sumD += lossD
-        if i == 0:
+        if np.random() <= 0.005:
             h5r = h5py.File((LOG_DIR + '/demo' + str(step) + '.h5'), 'w')
             h5r.create_dataset('data', data=pred_val)
             h5r.close()
@@ -333,12 +328,16 @@ def trainG(sess, ops, train_writer):
 
 
 def trainD(sess, ops, train_writer):
-    feed_dict = {ops['labels_plG']: np.ones(shape=(BATCH_SIZE, 1), dtype=float),
-                 ops['labels_plD']: np.concatenate((np.ones(shape=(BATCH_SIZE, 1), dtype=float),
-                                                    np.zeros(shape=(BATCH_SIZE, 1), dtype=float)), axis=0)}
+    generator = provider()
     loss_sumG = 0
     loss_sumD = 0
-    for i in range(200):
+    for data in generator:
+        feed_dict = {ops['labels_plG']: np.ones(shape=(BATCH_SIZE, 1), dtype=float),
+                     ops['labels_plD']: np.concatenate((np.ones(shape=(BATCH_SIZE, 1), dtype=float),
+                                                        np.zeros(shape=(BATCH_SIZE, 1), dtype=float)), axis=0),
+                     ops['cloud_labelsG']: data[1],
+                     ops['cloud_labelsD']: data[1],
+                     ops['point_cloudsD']: data[0]}
         summary, step, _, lossG, lossD, pred_val = sess.run([ops['merged'], ops['stepD'],
                                                              ops['train_opD'], ops['lossG'], ops['lossD'], ops['predD']],
                                                             feed_dict=feed_dict)
