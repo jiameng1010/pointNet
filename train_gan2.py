@@ -305,7 +305,7 @@ def train():
         print('Done!')
 
 def trainG(sess, ops, train_writer):
-    feed_dict = {ops['labels_plG']: np.ones(shape=(BATCH_SIZE, 1), dtype=float),
+    feed_dict = {ops['labels_plG']: np.zeros(shape=(BATCH_SIZE, 1), dtype=float),
                  ops['labels_plD']: np.concatenate((np.ones(shape=(BATCH_SIZE, 1), dtype=float),
                                                     np.zeros(shape=(BATCH_SIZE, 1), dtype=float)), axis=0)}
     loss_sumG = 0
@@ -326,7 +326,7 @@ def trainG(sess, ops, train_writer):
 
 
 def trainD(sess, ops, train_writer):
-    feed_dict = {ops['labels_plG']: np.ones(shape=(BATCH_SIZE, 1), dtype=float),
+    feed_dict = {ops['labels_plG']: np.zeros(shape=(BATCH_SIZE, 1), dtype=float),
                  ops['labels_plD']: np.concatenate((np.ones(shape=(BATCH_SIZE, 1), dtype=float),
                                                     np.zeros(shape=(BATCH_SIZE, 1), dtype=float)), axis=0)}
     loss_sumG = 0
