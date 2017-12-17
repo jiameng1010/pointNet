@@ -308,27 +308,35 @@ def trainG(sess, ops, train_writer):
     feed_dict = {ops['labels_plG']: np.ones(shape=(BATCH_SIZE, 1), dtype=float),
                  ops['labels_plD']: np.concatenate((np.ones(shape=(BATCH_SIZE, 1), dtype=float),
                                                     np.zeros(shape=(BATCH_SIZE, 1), dtype=float)), axis=0)}
-    loss_sum = 0
+    loss_sumG = 0
+    loss_sumD = 0
     for i in range(100):
-        summary, step, _, loss, pred_val = sess.run([ops['merged'], ops['stepG'],
-                                                         ops['train_opG'], ops['lossG'], ops['predG']],
-                                                    feed_dict=feed_dict)
+        summary, step, _, lossG, lossD, pred_val = sess.run([ops['merged'], ops['stepG'],
+                                                             ops['train_opG'], ops['lossG'], ops['lossD'], ops['predG']],
+                                                            feed_dict=feed_dict)
         train_writer.add_summary(summary, step)
-        loss_sum += loss
-    log_string('total lossG: %f' % loss_sum)
+        loss_sumG += lossG
+        loss_sumD += lossD
+    log_string('total lossG: %f' % loss_sumG)
+    log_string('total lossD: %f' % loss_sumD)
+
 
 def trainD(sess, ops, train_writer):
     feed_dict = {ops['labels_plG']: np.ones(shape=(BATCH_SIZE, 1), dtype=float),
                  ops['labels_plD']: np.concatenate((np.ones(shape=(BATCH_SIZE, 1), dtype=float),
                                                     np.zeros(shape=(BATCH_SIZE, 1), dtype=float)), axis=0)}
-    loss_sum = 0
+    loss_sumG = 0
+    loss_sumD = 0
     for i in range(100):
-        summary, step, _, loss, pred_val = sess.run([ops['merged'], ops['stepD'],
-                                                         ops['train_opD'], ops['lossD'], ops['predD']],
-                                                    feed_dict=feed_dict)
+        summary, step, _, lossG, lossD, pred_val = sess.run([ops['merged'], ops['stepD'],
+                                                             ops['train_opD'], ops['lossG'], ops['lossD'], ops['predD']],
+                                                            feed_dict=feed_dict)
         train_writer.add_summary(summary, step)
-        loss_sum += loss
-    log_string('total lossD: %f' % loss_sum)
+        loss_sumG += lossG
+        loss_sumD += lossD
+    log_string('total lossG: %f' % loss_sumG)
+    log_string('total lossD: %f' % loss_sumD)
+
 
 if __name__ == "__main__":
     train()
