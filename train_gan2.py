@@ -323,8 +323,7 @@ def trainG(sess, ops, train_writer):
     loss_sumD = 0
     for data in generator:
         feed_dict = {ops['labels_plG']: data[2],
-                     ops['labels_plD']: np.concatenate((40*np.ones(shape=(BATCH_SIZE), dtype=float),
-                                                        data[2]), axis=0),
+                     ops['labels_plD']: np.concatenate((data[2], 40*np.ones(shape=(BATCH_SIZE), dtype=float)), axis=0),
                      ops['cloud_labelsG']: data[1],
                      ops['cloud_labelsD']: data[1],
                      ops['point_cloudsD']: data[0]}
@@ -348,8 +347,7 @@ def trainD(sess, ops, train_writer):
     loss_sumD = 0
     for data in generator:
         feed_dict = {ops['labels_plG']: data[2],
-                     ops['labels_plD']: np.concatenate((40*np.ones(shape=(BATCH_SIZE), dtype=float),
-                                                        data[2]), axis=0),
+                     ops['labels_plD']: np.concatenate((data[2], 40*np.ones(shape=(BATCH_SIZE), dtype=float)), axis=0),
                      ops['cloud_labelsG']: data[1],
                      ops['cloud_labelsD']: data[1],
                      ops['point_cloudsD']: data[0]}
