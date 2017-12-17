@@ -283,7 +283,7 @@ def train():
 
         ops = {'labels_plD': gt_trainD,
                'labels_plG': gt_trainG,
-                'predG': D_output_trainG,
+                'predG': G_output,
                 'predD': D_output_trainD,
                 'lossG': lossG,
                 'lossD': lossD,
@@ -317,6 +317,10 @@ def trainG(sess, ops, train_writer):
         train_writer.add_summary(summary, step)
         loss_sumG += lossG
         loss_sumD += lossD
+        if i == 0:
+            h5r = h5py.File((LOG_DIR + '/demo' + str(step) + '.h5'), 'w')
+            h5r.create_dataset('data', data=pred_val)
+            h5r.close()
     log_string('total lossG: %f' % loss_sumG)
     log_string('total lossD: %f' % loss_sumD)
 
