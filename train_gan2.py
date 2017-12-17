@@ -241,8 +241,8 @@ def train():
                                        cloud_provider.output_shapes)
     training_init_op = iterator.make_initializer(cloud_provider)
     noise = tf.random_normal([FLAGS.batch_size, FLAGS.noise_dims])
-    gt_trainD = tf.placeholder(tf.int32, shape=(2*FLAGS.batch_size))
-    gt_trainG = tf.placeholder(tf.int32, shape=(FLAGS.batch_size))
+    gt_trainD = tf.placeholder(tf.int32, shape=(2*FLAGS.batch_size, 1))
+    gt_trainG = tf.placeholder(tf.int32, shape=(FLAGS.batch_size, 1))
 
     ## setup models
     with tf.variable_scope('Generator'):
@@ -305,9 +305,9 @@ def train():
         print('Done!')
 
 def trainG(sess, ops, train_writer):
-    feed_dict = {ops['labels_plG']: np.ones(shape=(BATCH_SIZE), dtype=float),
-                 ops['labels_plD']: np.concatenate((np.ones(shape=(BATCH_SIZE), dtype=float),
-                                                    np.zeros(shape=(BATCH_SIZE), dtype=float)), axis=0)}
+    feed_dict = {ops['labels_plG']: np.ones(shape=(BATCH_SIZE, 1), dtype=float),
+                 ops['labels_plD']: np.concatenate((np.ones(shape=(BATCH_SIZE, 1), dtype=float),
+                                                    np.zeros(shape=(BATCH_SIZE, 1), dtype=float)), axis=0)}
     loss_sum = 0
     for i in range(100):
         summary, step, _, loss, pred_val = sess.run([ops['merged'], ops['stepG'],
@@ -318,9 +318,9 @@ def trainG(sess, ops, train_writer):
         log_string('total lossG: %f' % loss_sum)
 
 def trainD(sess, ops, train_writer):
-    feed_dict = {ops['labels_plG']: np.ones(shape=(BATCH_SIZE), dtype=float),
-                 ops['labels_plD']: np.concatenate((np.ones(shape=(BATCH_SIZE), dtype=float),
-                                                    np.zeros(shape=(BATCH_SIZE), dtype=float)), axis=0)}
+    feed_dict = {ops['labels_plG']: np.ones(shape=(BATCH_SIZE, 1), dtype=float),
+                 ops['labels_plD']: np.concatenate((np.ones(shape=(BATCH_SIZE, 1), dtype=float),
+                                                    np.zeros(shape=(BATCH_SIZE, 1), dtype=float)), axis=0)}
     loss_sum = 0
     for i in range(100):
         summary, step, _, loss, pred_val = sess.run([ops['merged'], ops['stepD'],
