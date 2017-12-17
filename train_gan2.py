@@ -257,7 +257,7 @@ def train():
 
     ## setup loss
     lossD = MODEL.get_loss(D_output_trainD[0], gt_trainD, D_output_trainD[1])
-    lossG = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=D_output_trainG[0], labels=gt_trainG)
+    lossG = tf.nn.softmax_cross_entropy_with_logits(logits=D_output_trainG[0], labels=gt_trainG)
     lossG = tf.reduce_mean(lossG)
     tf.summary.scalar('lossD', lossD)
     tf.summary.scalar('lossG', lossG)
