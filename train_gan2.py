@@ -217,6 +217,21 @@ def conditional_generator(inputs):
 
     return cloud
 
+def density_penalty(G_output):
+    mean = tf.reduce_mean(G_output, axis=1)
+    mean = tf.expand_dims(mean, axis=1)
+    mean = tf.concat([mean, mean], axis=1)#2
+    mean = tf.concat([mean, mean], axis=1)#2
+    mean = tf.concat([mean, mean], axis=1)#2
+    mean = tf.concat([mean, mean], axis=1)#2
+    mean = tf.concat([mean, mean], axis=1)#2
+    mean = tf.concat([mean, mean], axis=1)#2
+    mean = tf.concat([mean, mean], axis=1)#2
+    mean = tf.concat([mean, mean], axis=1)#2
+    mean = tf.concat([mean, mean], axis=1)#2
+    mean = tf.concat([mean, mean], axis=1)#2
+    return tf.abs(tf.subtract(mean, G_output))
+
 
 ######################################### main #############################################
 ######################################### main #############################################
@@ -250,8 +265,9 @@ def train():
 
     ## setup loss
     lossD = MODEL.get_loss(D_output_trainD[0], gt_trainD, D_output_trainD[1])
-    lossG = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=D_output_trainG[0], labels=gt_trainG)
-    lossG = tf.reduce_mean(lossG)
+    lossG1 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=D_output_trainG[0], labels=gt_trainG)
+    lossG2 = density_penalty(G_output)
+    lossG = tf.reduce_mean(lossG1) + tf.reduce_mean(tf.reduce_mean(tf.reduce_mean(lossG2)))
     tf.summary.scalar('lossD', lossD)
     tf.summary.scalar('lossG', lossG)
 
