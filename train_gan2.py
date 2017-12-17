@@ -299,8 +299,8 @@ def train():
 
         for epoch in range(200):
             log_string('**** EPOCH %03d ****' % (epoch))
-            trainD(sess, ops, train_writer)
             trainG(sess, ops, train_writer)
+            trainD(sess, ops, train_writer)
 
         print('Done!')
 
