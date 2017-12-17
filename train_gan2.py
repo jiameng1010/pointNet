@@ -310,6 +310,8 @@ def train():
 
         for epoch in range(200):
             log_string('**** EPOCH %03d ****' % (epoch))
+            if not epoch == 0:
+                trainG(sess, ops, train_writer)
             trainD(sess, ops, train_writer)
             trainG(sess, ops, train_writer)
 
@@ -332,7 +334,7 @@ def trainG(sess, ops, train_writer):
         train_writer.add_summary(summary, step)
         loss_sumG += lossG
         loss_sumD += lossD
-        if np.random.rand() <= 0.005:
+        if np.random.rand() <= 0.002:
             h5r = h5py.File((LOG_DIR + '/demo' + str(step) + '.h5'), 'w')
             h5r.create_dataset('data', data=pred_val)
             h5r.close()
