@@ -257,8 +257,8 @@ def train():
 
     ## setup loss
     lossD = MODEL.get_loss(D_output_trainD[0], gt_trainD, D_output_trainD[1])
-    lossG = tf.nn.softmax_cross_entropy_with_logits(logits=D_output_trainG[0], labels=gt_trainG)
-    lossG = tf.reduce_mean(lossG)
+    lossGG = tf.nn.softmax_cross_entropy_with_logits(logits=D_output_trainG[0], labels=gt_trainG)
+    lossG = tf.reduce_mean(lossGG)
     tf.summary.scalar('lossD', lossD)
     tf.summary.scalar('lossG', lossG)
 
@@ -305,7 +305,7 @@ def train():
         print('Done!')
 
 def trainG(sess, ops, train_writer):
-    feed_dict = {ops['labels_plG']: np.zeros(shape=(BATCH_SIZE, 1), dtype=float),
+    feed_dict = {ops['labels_plG']: np.ones(shape=(BATCH_SIZE, 1), dtype=float),
                  ops['labels_plD']: np.concatenate((np.ones(shape=(BATCH_SIZE, 1), dtype=float),
                                                     np.zeros(shape=(BATCH_SIZE, 1), dtype=float)), axis=0)}
     loss_sumG = 0
@@ -326,7 +326,7 @@ def trainG(sess, ops, train_writer):
 
 
 def trainD(sess, ops, train_writer):
-    feed_dict = {ops['labels_plG']: np.zeros(shape=(BATCH_SIZE, 1), dtype=float),
+    feed_dict = {ops['labels_plG']: np.ones(shape=(BATCH_SIZE, 1), dtype=float),
                  ops['labels_plD']: np.concatenate((np.ones(shape=(BATCH_SIZE, 1), dtype=float),
                                                     np.zeros(shape=(BATCH_SIZE, 1), dtype=float)), axis=0)}
     loss_sumG = 0
