@@ -235,11 +235,17 @@ def train():
     cloud_provider = tf.data.Dataset.from_generator(provide_data, output_types=(tf.float32, tf.float32), \
                                                     output_shapes=(
                                                     tf.TensorShape([32, 1024, 3]), tf.TensorShape([32, 40])))
+    cloud_provider2 = tf.data.Dataset.from_generator(provide_data, output_types=(tf.float32, tf.float32), \
+                                                    output_shapes=(
+                                                    tf.TensorShape([32, 1024, 3]), tf.TensorShape([32, 40])))
     point_cloudsG, cloud_labelsG = cloud_provider.make_one_shot_iterator().get_next()
-    point_cloudsD, cloud_labelsD = cloud_provider.make_one_shot_iterator().get_next()
-    iterator = Iterator.from_structure(cloud_provider.output_types,
+    point_cloudsD, cloud_labelsD = cloud_provider2.make_one_shot_iterator().get_next()
+    iterator1 = Iterator.from_structure(cloud_provider.output_types,
                                        cloud_provider.output_shapes)
-    training_init_op = iterator.make_initializer(cloud_provider)
+    training_init_op1 = iterator1.make_initializer(cloud_provider)
+    iterator2 = Iterator.from_structure(cloud_provider.output_types,
+                                       cloud_provider.output_shapes)
+    training_init_op2 = iterator2.make_initializer(cloud_provider)
     noise = tf.random_normal([FLAGS.batch_size, FLAGS.noise_dims])
     gt_trainD = tf.placeholder(tf.int32, shape=(2*FLAGS.batch_size, 1))
     gt_trainG = tf.placeholder(tf.int32, shape=(FLAGS.batch_size, 1))
@@ -293,7 +299,8 @@ def train():
                 'stepG': stepsG,
                 'stepD': stepsD}
         # initialize the iterator and variable on the training data
-        sess.run(training_init_op)
+        sess.run(training_init_op1)
+        sess.run(training_init_op2)
         init = tf.global_variables_initializer()
         sess.run(init)
 
