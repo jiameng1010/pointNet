@@ -65,7 +65,7 @@ def get_learning_rateG(batch):
                         DECAY_STEP,          # Decay step.
                         DECAY_RATE,          # Decay rate.
                         staircase=True)
-    learning_rate = tf.maximum(learning_rate, 0.00001) # CLIP THE LEARNING RATE!
+    learning_rate = tf.maximum(learning_rate, 0.000001) # CLIP THE LEARNING RATE!
     return learning_rate
 
 def get_learning_rateD(batch):
@@ -75,7 +75,7 @@ def get_learning_rateD(batch):
                         DECAY_STEP,          # Decay step.
                         DECAY_RATE,          # Decay rate.
                         staircase=True)
-    learning_rate = tf.maximum(learning_rate, 0.00001) # CLIP THE LEARNING RATE!
+    learning_rate = tf.maximum(learning_rate, 0.000001) # CLIP THE LEARNING RATE!
     return learning_rate
 
 def provide_data():
@@ -328,7 +328,7 @@ def trainD(sess, ops, train_writer):
                                                     feed_dict=feed_dict)
         train_writer.add_summary(summary, step)
         loss_sum += loss
-        log_string('total lossG: %f' % loss_sum)
+        log_string('total lossD: %f' % loss_sum)
 
 if __name__ == "__main__":
     train()
