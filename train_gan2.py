@@ -96,12 +96,12 @@ def provide_data():
         rotated_data = provider.rotate_point_cloud(current_data[start_idx:end_idx, :, :])
         jittered_data = provider.jitter_point_cloud(rotated_data)
         # mantipulate labe
-        one_hot_labe = np.zeros((BATCH_SIZE, 40))
+        one_hot_labe = np.zeros((BATCH_SIZE, 41))
         one_hot_labe[np.arange(BATCH_SIZE), current_label[start_idx:end_idx]] = 1
 
         #out['data'] = jittered_data
         #out['labe'] = one_hot_labe
-        yield jittered_data, one_hot_labe
+        yield jittered_data, one_hot_labe, current_label[start_idx:end_idx]
 
 def get_model(point_cloud, is_training, one_hot_labels, bn_decay=None,):
     """ Classification PointNet, input is BxNx3, output Bx40 """
@@ -118,7 +118,6 @@ def get_model(point_cloud, is_training, one_hot_labels, bn_decay=None,):
                          padding='VALID', stride=[1,1],
                          bn=True, is_training=is_training,
                          scope='conv1', bn_decay=bn_decay)
-    net = tfgan.features.condition_tensor_from_onehot(net, one_hot_labels)
     net = tf_util.conv2d(net, 64, [1,1],
                          padding='VALID', stride=[1,1],
                          bn=True, is_training=is_training,
@@ -134,7 +133,6 @@ def get_model(point_cloud, is_training, one_hot_labels, bn_decay=None,):
                          padding='VALID', stride=[1,1],
                          bn=True, is_training=is_training,
                          scope='conv3', bn_decay=bn_decay)
-    #net = tfgan.features.condition_tensor_from_onehot(net, one_hot_labels)
     net = tf_util.conv2d(net, 128, [1,1],
                          padding='VALID', stride=[1,1],
                          bn=True, is_training=is_training,
@@ -157,7 +155,7 @@ def get_model(point_cloud, is_training, one_hot_labels, bn_decay=None,):
                                   scope='fc2', bn_decay=bn_decay)
     net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
                           scope='dp2')
-    net = tf_util.fully_connected(net, 40, activation_fn=None, scope='fc3')
+    net = tf_util.fully_connected(net, 41, activation_fn=None, scope='fc3')
 
     return net, end_points
 
@@ -166,7 +164,7 @@ def conditional_discriminator(point_clouds, one_hot_labels):
     # Get model and loss
     with tf.variable_scope('discriminator', reuse=tf.AUTO_REUSE):
         pred, end_points = get_model(point_clouds, tf.squeeze(is_training_pl), one_hot_labels)
-        return layers.fully_connected(pred, 1, activation_fn=None), end_points
+        return pred, end_points
 
 def generate_cloud(feature, noise):
     feature = tf.concat([feature, feature], axis=1)#2
@@ -232,12 +230,12 @@ def train():
 
     ## setup input data
     point_cloudsG = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 1024, 3))
-    cloud_labelsG = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 40))
+    cloud_labelsG = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 41))
     point_cloudsD = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 1024, 3))
-    cloud_labelsD = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 40))
+    cloud_labelsD = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 41))
     noise = tf.random_normal([FLAGS.batch_size, FLAGS.noise_dims])
-    gt_trainD = tf.placeholder(tf.int32, shape=(2*FLAGS.batch_size, 1))
-    gt_trainG = tf.placeholder(tf.int32, shape=(FLAGS.batch_size, 1))
+    gt_trainD = tf.placeholder(tf.int32, shape=(2*FLAGS.batch_size))
+    gt_trainG = tf.placeholder(tf.int32, shape=(FLAGS.batch_size))
 
     ## setup models
     with tf.variable_scope('Generator'):
@@ -252,8 +250,8 @@ def train():
 
     ## setup loss
     lossD = MODEL.get_loss(D_output_trainD[0], gt_trainD, D_output_trainD[1])
-    lossGG = tf.nn.softmax_cross_entropy_with_logits(logits=D_output_trainG[0], labels=gt_trainG)
-    lossG = tf.reduce_mean(lossGG)
+    lossG = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=D_output_trainG[0], labels=gt_trainG)
+    lossG = tf.reduce_mean(lossG)
     tf.summary.scalar('lossD', lossD)
     tf.summary.scalar('lossG', lossG)
 
@@ -296,8 +294,8 @@ def train():
 
         for epoch in range(200):
             log_string('**** EPOCH %03d ****' % (epoch))
-            trainD(sess, ops, train_writer)
             trainG(sess, ops, train_writer)
+            trainD(sess, ops, train_writer)
 
         print('Done!')
 
@@ -306,9 +304,9 @@ def trainG(sess, ops, train_writer):
     loss_sumG = 0
     loss_sumD = 0
     for data in generator:
-        feed_dict = {ops['labels_plG']: np.ones(shape=(BATCH_SIZE, 1), dtype=float),
-                     ops['labels_plD']: np.concatenate((np.ones(shape=(BATCH_SIZE, 1), dtype=float),
-                                                        np.zeros(shape=(BATCH_SIZE, 1), dtype=float)), axis=0),
+        feed_dict = {ops['labels_plG']: data[2],
+                     ops['labels_plD']: np.concatenate((40*np.ones(shape=(BATCH_SIZE), dtype=float),
+                                                        data[2]), axis=0),
                      ops['cloud_labelsG']: data[1],
                      ops['cloud_labelsD']: data[1],
                      ops['point_cloudsD']: data[0]}
@@ -331,9 +329,9 @@ def trainD(sess, ops, train_writer):
     loss_sumG = 0
     loss_sumD = 0
     for data in generator:
-        feed_dict = {ops['labels_plG']: np.ones(shape=(BATCH_SIZE, 1), dtype=float),
-                     ops['labels_plD']: np.concatenate((np.ones(shape=(BATCH_SIZE, 1), dtype=float),
-                                                        np.zeros(shape=(BATCH_SIZE, 1), dtype=float)), axis=0),
+        feed_dict = {ops['labels_plG']: data[2],
+                     ops['labels_plD']: np.concatenate((40*np.ones(shape=(BATCH_SIZE), dtype=float),
+                                                        data[2]), axis=0),
                      ops['cloud_labelsG']: data[1],
                      ops['cloud_labelsD']: data[1],
                      ops['point_cloudsD']: data[0]}
