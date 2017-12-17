@@ -79,30 +79,29 @@ def get_learning_rateD(batch):
     return learning_rate
 
 def provide_data():
-    while(True):
-        BATCH_SIZE = FLAGS.batch_size
-        current_data, current_label = provider.loadDataFile('./data/modelnet40_ply_hdf5_2048/train_all.h5')
-        current_data, current_label, _ = provider.shuffle_data(current_data, np.squeeze(current_label))
-        current_label = np.squeeze(current_label)
+    BATCH_SIZE = FLAGS.batch_size
+    current_data, current_label = provider.loadDataFile('./data/modelnet40_ply_hdf5_2048/train_all.h5')
+    current_data, current_label, _ = provider.shuffle_data(current_data, np.squeeze(current_label))
+    current_label = np.squeeze(current_label)
 
 
-        file_size = current_data.shape[0]
-        num_batches = file_size // BATCH_SIZE
+    file_size = current_data.shape[0]
+    num_batches = file_size // BATCH_SIZE
 
-        for batch_idx in range(num_batches):
-            start_idx = batch_idx * BATCH_SIZE
-            end_idx = (batch_idx + 1) * BATCH_SIZE
+    for batch_idx in range(num_batches):
+        start_idx = batch_idx * BATCH_SIZE
+        end_idx = (batch_idx + 1) * BATCH_SIZE
 
-            # mantipulation data
-            rotated_data = provider.rotate_point_cloud(current_data[start_idx:end_idx, :, :])
-            jittered_data = provider.jitter_point_cloud(rotated_data)
-            # mantipulate labe
-            one_hot_labe = np.zeros((BATCH_SIZE, 40))
-            one_hot_labe[np.arange(BATCH_SIZE), current_label[start_idx:end_idx]] = 1
+        # mantipulation data
+        rotated_data = provider.rotate_point_cloud(current_data[start_idx:end_idx, :, :])
+        jittered_data = provider.jitter_point_cloud(rotated_data)
+        # mantipulate labe
+        one_hot_labe = np.zeros((BATCH_SIZE, 40))
+        one_hot_labe[np.arange(BATCH_SIZE), current_label[start_idx:end_idx]] = 1
 
-            #out['data'] = jittered_data
-            #out['labe'] = one_hot_labe
-            yield jittered_data, one_hot_labe
+        #out['data'] = jittered_data
+        #out['labe'] = one_hot_labe
+        yield jittered_data, one_hot_labe
 
 def get_model(point_cloud, is_training, one_hot_labels, bn_decay=None,):
     """ Classification PointNet, input is BxNx3, output Bx40 """
@@ -303,7 +302,7 @@ def train():
         print('Done!')
 
 def trainG(sess, ops, train_writer):
-    generator = provider()
+    generator = provide_data()
     loss_sumG = 0
     loss_sumD = 0
     for data in generator:
@@ -328,7 +327,7 @@ def trainG(sess, ops, train_writer):
 
 
 def trainD(sess, ops, train_writer):
-    generator = provider()
+    generator = provide_data()
     loss_sumG = 0
     loss_sumD = 0
     for data in generator:
