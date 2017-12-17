@@ -331,7 +331,7 @@ def trainD(sess, ops, train_writer):
                                                     np.zeros(shape=(BATCH_SIZE, 1), dtype=float)), axis=0)}
     loss_sumG = 0
     loss_sumD = 0
-    for i in range(500):
+    for i in range(200):
         summary, step, _, lossG, lossD, pred_val = sess.run([ops['merged'], ops['stepD'],
                                                              ops['train_opD'], ops['lossG'], ops['lossD'], ops['predD']],
                                                             feed_dict=feed_dict)
