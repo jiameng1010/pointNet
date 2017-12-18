@@ -26,7 +26,7 @@ parser.add_argument('--log_dir', default='log', help='Log dir [default: log]')
 parser.add_argument('--num_point', type=int, default=1024, help='Point Number [256/512/1024/2048] [default: 1024]')
 parser.add_argument('--max_epoch', type=int, default=250, help='Epoch to run [default: 250]')
 parser.add_argument('--batch_size', type=int, default=32, help='Batch Size during training [default: 32]')
-parser.add_argument('--learning_rate', type=float, default=0.0001, help='Initial learning rate [default: 0.001]')
+parser.add_argument('--learning_rate', type=float, default=0.00001, help='Initial learning rate [default: 0.001]')
 parser.add_argument('--momentum', type=float, default=0.9, help='Initial learning rate [default: 0.9]')
 parser.add_argument('--optimizer', default='adam', help='adam or momentum [default: adam]')
 parser.add_argument('--decay_step', type=int, default=200000, help='Decay step for lr decay [default: 200000]')
@@ -65,7 +65,7 @@ def get_learning_rateG(batch):
                         DECAY_STEP,          # Decay step.
                         DECAY_RATE,          # Decay rate.
                         staircase=True)
-    learning_rate = tf.maximum(learning_rate, 0.000001) # CLIP THE LEARNING RATE!
+    learning_rate = tf.maximum(learning_rate, 0.0000001) # CLIP THE LEARNING RATE!
     return learning_rate
 
 def get_learning_rateD(batch):
@@ -75,7 +75,7 @@ def get_learning_rateD(batch):
                         DECAY_STEP,          # Decay step.
                         DECAY_RATE,          # Decay rate.
                         staircase=True)
-    learning_rate = tf.maximum(learning_rate, 0.000001) # CLIP THE LEARNING RATE!
+    learning_rate = tf.maximum(learning_rate, 0.0000001) # CLIP THE LEARNING RATE!
     return learning_rate
 
 def provide_data():
@@ -264,7 +264,7 @@ def train():
     lossD = MODEL.get_loss(D_output_trainD[0], gt_trainD, D_output_trainD[1])
     lossG1 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=D_output_trainG[0], labels=gt_trainG)
     lossG2 = density_penalty(G_output)
-    lossG = tf.reduce_mean(lossG1) + (1e-4)*lossG2
+    lossG = tf.reduce_mean(lossG1) + (1e-5)*lossG2
     tf.summary.scalar('lossD', lossD)
     tf.summary.scalar('lossG', lossG)
 
@@ -311,7 +311,7 @@ def train():
                 trainG(sess, ops, train_writer)
             trainD(sess, ops, train_writer)
             trainG(sess, ops, train_writer)
-
+            trainG(sess, ops, train_writer)
         print('Done!')
 
 def trainG(sess, ops, train_writer):
