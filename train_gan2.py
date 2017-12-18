@@ -217,20 +217,18 @@ def conditional_generator(inputs):
 
     return cloud
 
+def density_penalty_for_one(G_output):
+    loss = tf.constant([0.0])
+    for i in range(1024):
+        for j in range(i+1, 1024):
+            loss += tf.norm((G_output[i, :] - G_output[j, :]), axis=0)
+
 def density_penalty(G_output):
-    mean = tf.reduce_mean(G_output, axis=1)
-    mean = tf.expand_dims(mean, axis=1)
-    mean = tf.concat([mean, mean], axis=1)#2
-    mean = tf.concat([mean, mean], axis=1)#2
-    mean = tf.concat([mean, mean], axis=1)#2
-    mean = tf.concat([mean, mean], axis=1)#2
-    mean = tf.concat([mean, mean], axis=1)#2
-    mean = tf.concat([mean, mean], axis=1)#2
-    mean = tf.concat([mean, mean], axis=1)#2
-    mean = tf.concat([mean, mean], axis=1)#2
-    mean = tf.concat([mean, mean], axis=1)#2
-    mean = tf.concat([mean, mean], axis=1)#2
-    return tf.abs(tf.subtract(mean, G_output))
+    #shuffled = tf.Tensor(dtype=tf.float32)
+    loss = tf.constant([0.0])
+    for i in range(BATCH_SIZE):
+        loss += density_penalty_for_one(G_output[i, :, :])
+    return loss
 
 
 ######################################### main #############################################
@@ -267,7 +265,7 @@ def train():
     lossD = MODEL.get_loss(D_output_trainD[0], gt_trainD, D_output_trainD[1])
     lossG1 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=D_output_trainG[0], labels=gt_trainG)
     lossG2 = density_penalty(G_output)
-    lossG = tf.reduce_mean(lossG1) - 10*tf.reduce_mean(tf.reduce_mean(tf.reduce_mean(lossG2)))
+    lossG = tf.reduce_mean(lossG1) - 10*lossG2
     tf.summary.scalar('lossD', lossD)
     tf.summary.scalar('lossG', lossG)
 
