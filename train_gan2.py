@@ -220,7 +220,7 @@ def conditional_generator(inputs):
 def density_penalty_for_one(G_output):
     shuffled = tf.random_shuffle(G_output)
     stoped_shuffled = tf.stop_gradient(shuffled)
-    return tf.norm(stoped_shuffled-G_output)
+    return tf.abs(stoped_shuffled-G_output)
 
 def density_penalty(G_output):
     #with tf.variable_scope('NO_TRAINING'):
