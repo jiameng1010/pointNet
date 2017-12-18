@@ -220,7 +220,7 @@ def conditional_generator(inputs):
 def density_penalty_for_one(G_output):
     shuffled = tf.random_shuffle(G_output)
     stoped_shuffled = tf.stop_gradient(shuffled)
-    return tf.abs(stoped_shuffled-G_output)
+    return tf.norm(stoped_shuffled-G_output)
 
 def density_penalty(G_output):
     #with tf.variable_scope('NO_TRAINING'):
@@ -264,8 +264,8 @@ def train():
     lossD = MODEL.get_loss(D_output_trainD[0], gt_trainD, D_output_trainD[1])
     lossG1 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=D_output_trainG[0], labels=gt_trainG)
     lossG2 = density_penalty(G_output)
-    #lossG = tf.reduce_mean(lossG1) -tf.reduce_mean(tf.reduce_mean((1e-4)*lossG2))
-    lossG = -tf.reduce_mean((1e-3)*lossG2)
+    lossG = tf.reduce_mean(lossG1) - tf.reduce_mean(tf.reduce_mean((1e-3)*lossG2))
+    #lossG = -tf.reduce_mean((1e-3)*lossG2)
     tf.summary.scalar('lossD', lossD)
     tf.summary.scalar('lossG', lossG)
 
