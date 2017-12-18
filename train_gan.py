@@ -125,7 +125,7 @@ def get_model(point_cloud, is_training, one_hot_labels, bn_decay=None,):
                          scope='conv5', bn_decay=bn_decay)
 
     # Symmetric function: max pooling
-    net = tf_util.max_pool2d(net, [num_point,1],
+    net = tf_util.avg_pool2d(net, [num_point,1],
                              padding='VALID', scope='maxpool')
 
     net = tf.reshape(net, [batch_size, -1])
