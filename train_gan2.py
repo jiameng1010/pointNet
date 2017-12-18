@@ -222,11 +222,11 @@ def density_penalty_for_one(G_output):
     return tf.norm(loss)
 
 def density_penalty(G_output):
-    #shuffled = tf.Tensor(dtype=tf.float32)
-    #loss = tf.constant([0.0])
-    #for i in range(BATCH_SIZE):
-    #    loss += density_penalty_for_one(G_output[i, :, :])
-    loss = tf.histogram_fixed_width(G_output, [-1.0, 1.0], nbins=50)
+    #with tf.variable_scope('NO_TRAINING'):
+    shuffled = tf.random_shuffle(G_output)
+    stoped_shuffled = tf.stop_gradient(shuffled)
+    #loss = tf.histogram_fixed_width(G_output, [-1.0, 1.0], nbins=50)
+    loss = stoped_shuffled - G_output
     return tf.norm(tf.to_float(loss))
 
 
@@ -265,7 +265,7 @@ def train():
     lossG1 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=D_output_trainG[0], labels=gt_trainG)
     lossG2 = density_penalty(G_output)
     #lossG = tf.reduce_mean(lossG1) + (1e-5)*lossG2
-    lossG = (1e-4)*lossG2
+    lossG = tf.reduce_mean(tf.reduce_mean((1e-4)*lossG2))
     tf.summary.scalar('lossD', lossD)
     tf.summary.scalar('lossG', lossG)
 
