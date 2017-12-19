@@ -335,18 +335,32 @@ def train():
         print('Done!')
 
 def trainG(sess, ops, train_writer):
+    log_string('train GGGGGGGGGGGGGGGGGGGGG')
     generator = provide_data()
     loss_sumG = 0
     loss_sumD = 0
+    AcDsum = 0
+    AcGsum = 0
+    AgDsum = 0
+    AgGsum = 0
     for data in generator:
         feed_dict = {ops['labels_plG']: data[2],
                      ops['labels_plD']: np.concatenate((data[2], 40*np.ones(shape=(BATCH_SIZE), dtype=float)), axis=0),
                      ops['cloud_labelsG']: data[1],
                      ops['cloud_labelsD']: data[1],
                      ops['point_cloudsD']: data[0]}
-        summary, step, _, lossG, lossD, pred_val = sess.run([ops['merged'], ops['stepG'],
-                                                             ops['train_opG'], ops['lossG'], ops['lossD'], ops['predG']],
-                                                            feed_dict=feed_dict)
+        summary, step, _, lossG, lossD, pred_val, AcD, AcG, AgD, AgG = sess.run([ops['merged'], ops['stepG'],
+                                                                                 ops['train_opG'], ops['lossG'],
+                                                                                 ops['lossD'], ops['predG'],
+                                                                                 ops['accuracy_classification_trainD'],
+                                                                                 ops['accuracy_classification_trainG'],
+                                                                                 ops['accuracy_gan_trainD'],
+                                                                                 ops['accuracy_gan_trainG']],
+                                                                                feed_dict=feed_dict)
+        AcDsum += AcD
+        AcGsum += AcG
+        AgDsum += AgD
+        AgGsum += AgG
         train_writer.add_summary(summary, step)
         loss_sumG += lossG
         loss_sumD += lossD
@@ -356,26 +370,48 @@ def trainG(sess, ops, train_writer):
             h5r.close()
     log_string('total lossG: %f' % loss_sumG)
     log_string('total lossD: %f' % loss_sumD)
+    log_string('accuracy_classification_trainD: %f' % AcDsum)
+    log_string('accuracy_classification_trainG: %f' % AcGsum)
+    log_string('accuracy_gan_trainD: %f' % AgDsum)
+    log_string('accuracy_gan_trainG: %f' % AgGsum)
 
 
 def trainD(sess, ops, train_writer):
+    log_string('train DDDDDDDDDDDDDDDD')
     generator = provide_data()
     loss_sumG = 0
     loss_sumD = 0
+    AcDsum = 0
+    AcGsum = 0
+    AgDsum = 0
+    AgGsum = 0
     for data in generator:
         feed_dict = {ops['labels_plG']: data[2],
                      ops['labels_plD']: np.concatenate((data[2], 40*np.ones(shape=(BATCH_SIZE), dtype=float)), axis=0),
                      ops['cloud_labelsG']: data[1],
                      ops['cloud_labelsD']: data[1],
                      ops['point_cloudsD']: data[0]}
-        summary, step, _, lossG, lossD, pred_val = sess.run([ops['merged'], ops['stepD'],
-                                                             ops['train_opD'], ops['lossG'], ops['lossD'], ops['predD']],
-                                                            feed_dict=feed_dict)
+        summary, step, _, lossG, lossD, pred_val, AcD, AcG, AgD, AgG = sess.run([ops['merged'], ops['stepD'],
+                                                                                 ops['train_opD'], ops['lossG'],
+                                                                                 ops['lossD'], ops['predD'],
+                                                                                 ops['accuracy_classification_trainD'],
+                                                                                 ops['accuracy_classification_trainG'],
+                                                                                 ops['accuracy_gan_trainD'],
+                                                                                 ops['accuracy_gan_trainG']],
+                                                                                feed_dict=feed_dict)
         train_writer.add_summary(summary, step)
         loss_sumG += lossG
         loss_sumD += lossD
+        AcDsum += AcD
+        AcGsum += AcG
+        AgDsum += AgD
+        AgGsum += AgG
     log_string('total lossG: %f' % loss_sumG)
     log_string('total lossD: %f' % loss_sumD)
+    log_string('accuracy_classification_trainD: %f' % AcDsum)
+    log_string('accuracy_classification_trainG: %f' % AcGsum)
+    log_string('accuracy_gan_trainD: %f' % AgDsum)
+    log_string('accuracy_gan_trainG: %f' % AgGsum)
 
 
 if __name__ == "__main__":
