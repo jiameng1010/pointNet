@@ -372,10 +372,10 @@ def trainG(sess, ops, train_writer):
             h5r.close()
     log_string('total lossG: %f' % loss_sumG)
     log_string('total lossD: %f' % loss_sumD)
-    log_string('accuracy_classification_trainD: %f' % AcDsum/num)
-    log_string('accuracy_classification_trainG: %f' % AcGsum/num)
-    log_string('accuracy_gan_trainD: %f' % AgDsum/num)
-    log_string('accuracy_gan_trainG: %f' % AgGsum/num)
+    log_string('accuracy_classification_trainD: %f' % (AcDsum/num))
+    log_string('accuracy_classification_trainG: %f' % (AcGsum/num))
+    log_string('accuracy_gan_trainD: %f' % (AgDsum/num))
+    log_string('accuracy_gan_trainG: %f' % (AgGsum/num))
 
 
 def trainD(sess, ops, train_writer):
@@ -412,10 +412,10 @@ def trainD(sess, ops, train_writer):
         AgGsum += AgG
     log_string('total lossG: %f' % loss_sumG)
     log_string('total lossD: %f' % loss_sumD)
-    log_string('accuracy_classification_trainD: %f' % AcDsum/num)
-    log_string('accuracy_classification_trainG: %f' % AcGsum/num)
-    log_string('accuracy_gan_trainD: %f' % AgDsum/num)
-    log_string('accuracy_gan_trainG: %f' % AgGsum/num)
+    log_string('accuracy_classification_trainD: %f' % (AcDsum/num))
+    log_string('accuracy_classification_trainG: %f' % (AcGsum/num))
+    log_string('accuracy_gan_trainD: %f' % (AgDsum/num))
+    log_string('accuracy_gan_trainG: %f' % (AgGsum/num))
 
 
 if __name__ == "__main__":
