@@ -273,7 +273,7 @@ def train():
     accuracy_classification_trainD = tf.reduce_sum(tf.cast(correct_trainD, tf.float32)) / float(2*BATCH_SIZE)
     correct_trainG = tf.equal(tf.argmax(D_output_trainG[0], 1), tf.to_int64(gt_trainG))
     accuracy_classification_trainG = tf.reduce_sum(tf.cast(correct_trainG, tf.float32)) / float(BATCH_SIZE)
-    forty_one = tf.constant(41 * np.ones(shape=(BATCH_SIZE), dtype=int))
+    forty = tf.constant(40 * np.ones(shape=(BATCH_SIZE), dtype=int))
     correct_gan_trainD1 = tf.less(tf.argmax(D_output_trainD[0], 1)[:BATCH_SIZE], tf.to_int64(forty_one))
     correct_gan_trainD2 = tf.equal(tf.argmax(D_output_trainD[0], 1)[BATCH_SIZE:], tf.to_int64(forty_one))
     accuracy_gan_trainD = tf.reduce_sum(tf.cast(tf.concat([correct_gan_trainD1, correct_gan_trainD2], axis=0), tf.float32)) / float(2*BATCH_SIZE)
@@ -343,7 +343,9 @@ def trainG(sess, ops, train_writer):
     AcGsum = 0
     AgDsum = 0
     AgGsum = 0
+    num = 0
     for data in generator:
+        num += 1
         feed_dict = {ops['labels_plG']: data[2],
                      ops['labels_plD']: np.concatenate((data[2], 40*np.ones(shape=(BATCH_SIZE), dtype=float)), axis=0),
                      ops['cloud_labelsG']: data[1],
@@ -370,10 +372,10 @@ def trainG(sess, ops, train_writer):
             h5r.close()
     log_string('total lossG: %f' % loss_sumG)
     log_string('total lossD: %f' % loss_sumD)
-    log_string('accuracy_classification_trainD: %f' % AcDsum)
-    log_string('accuracy_classification_trainG: %f' % AcGsum)
-    log_string('accuracy_gan_trainD: %f' % AgDsum)
-    log_string('accuracy_gan_trainG: %f' % AgGsum)
+    log_string('accuracy_classification_trainD: %f' % AcDsum/num)
+    log_string('accuracy_classification_trainG: %f' % AcGsum/num)
+    log_string('accuracy_gan_trainD: %f' % AgDsum/num)
+    log_string('accuracy_gan_trainG: %f' % AgGsum/num)
 
 
 def trainD(sess, ops, train_writer):
@@ -385,7 +387,9 @@ def trainD(sess, ops, train_writer):
     AcGsum = 0
     AgDsum = 0
     AgGsum = 0
+    num = 0
     for data in generator:
+        num += 1
         feed_dict = {ops['labels_plG']: data[2],
                      ops['labels_plD']: np.concatenate((data[2], 40*np.ones(shape=(BATCH_SIZE), dtype=float)), axis=0),
                      ops['cloud_labelsG']: data[1],
@@ -408,10 +412,10 @@ def trainD(sess, ops, train_writer):
         AgGsum += AgG
     log_string('total lossG: %f' % loss_sumG)
     log_string('total lossD: %f' % loss_sumD)
-    log_string('accuracy_classification_trainD: %f' % AcDsum)
-    log_string('accuracy_classification_trainG: %f' % AcGsum)
-    log_string('accuracy_gan_trainD: %f' % AgDsum)
-    log_string('accuracy_gan_trainG: %f' % AgGsum)
+    log_string('accuracy_classification_trainD: %f' % AcDsum/num)
+    log_string('accuracy_classification_trainG: %f' % AcGsum/num)
+    log_string('accuracy_gan_trainD: %f' % AgDsum/num)
+    log_string('accuracy_gan_trainG: %f' % AgGsum/num)
 
 
 if __name__ == "__main__":
