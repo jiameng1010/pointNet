@@ -269,6 +269,21 @@ def train():
     tf.summary.scalar('lossD', lossD)
     tf.summary.scalar('lossG', lossG)
 
+    correct_trainD = tf.equal(tf.argmax(D_output_trainD[0], 1), tf.to_int64(gt_trainD))
+    accuracy_classification_trainD = tf.reduce_sum(tf.cast(correct_trainD, tf.float32)) / float(2*BATCH_SIZE)
+    correct_trainG = tf.equal(tf.argmax(D_output_trainG[0], 1), tf.to_int64(gt_trainG))
+    accuracy_classification_trainG = tf.reduce_sum(tf.cast(correct_trainG, tf.float32)) / float(BATCH_SIZE)
+    forty_one = tf.constant(41 * np.ones(shape=(BATCH_SIZE), dtype=int))
+    correct_gan_trainD1 = tf.less(tf.argmax(D_output_trainD[0], 1)[:BATCH_SIZE], tf.to_int64(forty_one))
+    correct_gan_trainD2 = tf.equal(tf.argmax(D_output_trainD[0], 1)[BATCH_SIZE:], tf.to_int64(forty_one))
+    accuracy_gan_trainD = tf.reduce_sum(tf.cast(tf.concat([correct_gan_trainD1, correct_gan_trainD2], axis=0), tf.float32)) / float(2*BATCH_SIZE)
+    correct_gan_trainG = tf.equal(tf.argmax(D_output_trainG[0], 1), tf.to_int64(forty_one))
+    accuracy_gan_trainG = tf.reduce_sum(tf.cast(correct_gan_trainG, tf.float32)) / float(BATCH_SIZE)
+    tf.summary.scalar('accuracy_classification_trainD', accuracy_classification_trainD)
+    tf.summary.scalar('accuracy_classification_trainG', accuracy_classification_trainG)
+    tf.summary.scalar('accuracy_gan_trainD', accuracy_gan_trainD)
+    tf.summary.scalar('accuracy_gan_trainG', accuracy_gan_trainG)
+
     ## setup optimizor
     learning_rateG = get_learning_rateG(stepsG)
     learning_rateD = get_learning_rateD(stepsD)
@@ -301,7 +316,11 @@ def train():
                 'stepD': stepsD,
                 'cloud_labelsG': cloud_labelsG,
                 'point_cloudsD': point_cloudsD,
-                'cloud_labelsD': cloud_labelsD}
+                'cloud_labelsD': cloud_labelsD,
+               'accuracy_classification_trainD': accuracy_classification_trainD,
+               'accuracy_classification_trainG': accuracy_classification_trainG,
+               'accuracy_gan_trainD': accuracy_gan_trainD,
+               'accuracy_gan_trainG': accuracy_gan_trainG}
         # initialize the iterator and variable on the training data
         init = tf.global_variables_initializer()
         sess.run(init)
