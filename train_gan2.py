@@ -111,35 +111,37 @@ def get_model(point_cloud, is_training, one_hot_labels, bn_decay=None,):
 
     with tf.variable_scope('transform_net1', reuse=tf.AUTO_REUSE) as sc:
         transform = input_transform_net(point_cloud, is_training, bn_decay, K=3)
+
     point_cloud_transformed = tf.matmul(point_cloud, transform)
     input_image = tf.expand_dims(point_cloud_transformed, -1)
 
     net = tf_util.conv2d(input_image, 64, [1,3],
                          padding='VALID', stride=[1,1],
-                         bn=True, is_training=is_training,
+                         bn=False, is_training=is_training,
                          scope='conv1', bn_decay=bn_decay)
     net = tf_util.conv2d(net, 64, [1,1],
                          padding='VALID', stride=[1,1],
-                         bn=True, is_training=is_training,
+                         bn=False, is_training=is_training,
                          scope='conv2', bn_decay=bn_decay)
 
     with tf.variable_scope('transform_net2', reuse=tf.AUTO_REUSE) as sc:
         transform = feature_transform_net(net, is_training, bn_decay, K=64)
+
     end_points['transform'] = transform
     net_transformed = tf.matmul(tf.squeeze(net, axis=[2]), transform)
     net_transformed = tf.expand_dims(net_transformed, [2])
 
     net = tf_util.conv2d(net_transformed, 64, [1,1],
                          padding='VALID', stride=[1,1],
-                         bn=True, is_training=is_training,
+                         bn=False, is_training=is_training,
                          scope='conv3', bn_decay=bn_decay)
     net = tf_util.conv2d(net, 128, [1,1],
                          padding='VALID', stride=[1,1],
-                         bn=True, is_training=is_training,
+                         bn=False, is_training=is_training,
                          scope='conv4', bn_decay=bn_decay)
     net = tf_util.conv2d(net, 1024, [1,1],
                          padding='VALID', stride=[1,1],
-                         bn=True, is_training=is_training,
+                         bn=False, is_training=is_training,
                          scope='conv5', bn_decay=bn_decay)
 
     # Symmetric function: max pooling
@@ -147,11 +149,11 @@ def get_model(point_cloud, is_training, one_hot_labels, bn_decay=None,):
                              padding='VALID', scope='maxpool')
 
     net = tf.reshape(net, [batch_size, -1])
-    net = tf_util.fully_connected(net, 512, bn=True, is_training=is_training,
+    net = tf_util.fully_connected(net, 512, bn=False, is_training=is_training,
                                   scope='fc1', bn_decay=bn_decay)
     net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
                           scope='dp1')
-    net = tf_util.fully_connected(net, 256, bn=True, is_training=is_training,
+    net = tf_util.fully_connected(net, 256, bn=False, is_training=is_training,
                                   scope='fc2', bn_decay=bn_decay)
     net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
                           scope='dp2')
@@ -162,9 +164,10 @@ def get_model(point_cloud, is_training, one_hot_labels, bn_decay=None,):
 def conditional_discriminator(point_clouds, one_hot_labels):
     is_training_pl = tf.constant([True])
     # Get model and loss
-    with tf.variable_scope('discriminator', reuse=tf.AUTO_REUSE):
-        pred, end_points = get_model(point_clouds, tf.squeeze(is_training_pl), one_hot_labels)
-        return pred, end_points
+    #with tf.variable_scope('Discriminator', reuse=tf.AUTO_REUSE):
+    pred, end_points = get_model(point_clouds, tf.squeeze(is_training_pl), one_hot_labels)
+    return pred, end_points
+
 
 def generate_cloud(feature, noise):
     feature = tf.concat([feature, feature], axis=1)#2
@@ -253,10 +256,12 @@ def train():
     with tf.variable_scope('Generator'):
         G_input = noise, cloud_labelsG
         G_output = conditional_generator(G_input)
-    with tf.variable_scope('Discriminator'):
+    with tf.variable_scope('Discriminator', reuse=tf.AUTO_REUSE) as sc:
         D_output_trainG = conditional_discriminator(G_output, cloud_labelsG)
+        #D_output_trainG = conditional_discriminator(G_output, cloud_labelsG)
         D_input1_trainD = tf.concat([point_cloudsD, G_output], axis=0)
         D_input2_trainD = tf.concat([cloud_labelsD, cloud_labelsG], axis=0)
+        sc.reuse_variables()
         D_output_trainD = conditional_discriminator(D_input1_trainD, D_input2_trainD)
 
 
