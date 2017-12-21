@@ -417,8 +417,6 @@ def trainD(sess, ops, train_writer):
         AcGsum += AcG
         AgDsum += AgD
         AgGsum += AgG
-        if (AgGsum/num)>0.8:
-            break
     log_string('total lossG: %f' % loss_sumG)
     log_string('total lossD: %f' % loss_sumD)
     log_string('accuracy_classification_trainD: %f' % (AcDsum/num))
