@@ -216,6 +216,7 @@ def conditional_generator(inputs):
         feature = layers.fully_connected(net, 1024)
 
     noise2 = tf.random_normal([32, 1024, 128])
+    #noise2 = tf.to_float(tf.constant(np.zeros([32, 1024, 128])))
     cloud = generate_cloud(tf.expand_dims(feature, axis=1), noise2)
 
     return cloud
@@ -248,7 +249,7 @@ def train():
     cloud_labelsG = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 41))
     point_cloudsD = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 1024, 3))
     cloud_labelsD = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 41))
-    noise = tf.random_normal([FLAGS.batch_size, FLAGS.noise_dims])
+    noise = tf.placeholder(dtype=tf.float32, shape=(FLAGS.batch_size, FLAGS.noise_dims))
     gt_trainD = tf.placeholder(tf.int32, shape=(2*FLAGS.batch_size))
     gt_trainG = tf.placeholder(tf.int32, shape=(FLAGS.batch_size))
 
@@ -256,7 +257,7 @@ def train():
     with tf.variable_scope('Generator'):
         G_input = noise, cloud_labelsG
         G_output = conditional_generator(G_input)
-    with tf.variable_scope('Discriminator', reuse=tf.AUTO_REUSE) as sc:
+    with tf.variable_scope('Discriminator') as sc:
         D_output_trainG = conditional_discriminator(G_output, cloud_labelsG)
         #D_output_trainG = conditional_discriminator(G_output, cloud_labelsG)
         D_input1_trainD = tf.concat([point_cloudsD, G_output], axis=0)
@@ -310,8 +311,10 @@ def train():
 
         ops = {'labels_plD': gt_trainD,
                'labels_plG': gt_trainG,
+               'noise': noise,
                 'predG': G_output,
                 'predD': D_output_trainD,
+                'predDG': D_output_trainG,
                 'lossG': lossG,
                 'lossD': lossD,
                 'train_opG': train_opG,
@@ -336,7 +339,6 @@ def train():
                 trainG(sess, ops, train_writer)
             trainD(sess, ops, train_writer)
             trainG(sess, ops, train_writer)
-            trainG(sess, ops, train_writer)
         print('Done!')
 
 def trainG(sess, ops, train_writer):
@@ -350,12 +352,14 @@ def trainG(sess, ops, train_writer):
     AgGsum = 0
     num = 0
     for data in generator:
+        normal_noise = np.random.randn(FLAGS.batch_size, FLAGS.noise_dims)
         num += 1
         feed_dict = {ops['labels_plG']: data[2],
                      ops['labels_plD']: np.concatenate((data[2], 40*np.ones(shape=(BATCH_SIZE), dtype=float)), axis=0),
                      ops['cloud_labelsG']: data[1],
                      ops['cloud_labelsD']: data[1],
-                     ops['point_cloudsD']: data[0]}
+                     ops['point_cloudsD']: data[0],
+                     ops['noise']: normal_noise}
         summary, step, _, lossG, lossD, pred_val, AcD, AcG, AgD, AgG = sess.run([ops['merged'], ops['stepG'],
                                                                                  ops['train_opG'], ops['lossG'],
                                                                                  ops['lossD'], ops['predG'],
@@ -394,12 +398,14 @@ def trainD(sess, ops, train_writer):
     AgGsum = 0
     num = 0
     for data in generator:
+        normal_noise = np.random.randn(FLAGS.batch_size, FLAGS.noise_dims)
         num += 1
         feed_dict = {ops['labels_plG']: data[2],
                      ops['labels_plD']: np.concatenate((data[2], 40*np.ones(shape=(BATCH_SIZE), dtype=float)), axis=0),
                      ops['cloud_labelsG']: data[1],
                      ops['cloud_labelsD']: data[1],
-                     ops['point_cloudsD']: data[0]}
+                     ops['point_cloudsD']: data[0],
+                     ops['noise']: normal_noise}
         summary, step, _, lossG, lossD, pred_val, AcD, AcG, AgD, AgG = sess.run([ops['merged'], ops['stepD'],
                                                                                  ops['train_opD'], ops['lossG'],
                                                                                  ops['lossD'], ops['predD'],
@@ -415,12 +421,44 @@ def trainD(sess, ops, train_writer):
         AcGsum += AcG
         AgDsum += AgD
         AgGsum += AgG
+        if (AgGsum/num)>0.8:
+            break
     log_string('total lossG: %f' % loss_sumG)
     log_string('total lossD: %f' % loss_sumD)
     log_string('accuracy_classification_trainD: %f' % (AcDsum/num))
     log_string('accuracy_classification_trainG: %f' % (AcGsum/num))
     log_string('accuracy_gan_trainD: %f' % (AgDsum/num))
     log_string('accuracy_gan_trainG: %f' % (AgGsum/num))
+
+
+def tester(sess, ops, train_writer):
+    log_string('tester')
+    generator = provide_data()
+    for data in generator:
+        normal_noise = np.random.randn(FLAGS.batch_size, FLAGS.noise_dims)
+        feed_dict = {ops['labels_plG']: data[2],
+                     ops['labels_plD']: np.concatenate((data[2], 40 * np.ones(shape=(BATCH_SIZE), dtype=float)), axis=0),
+                     ops['cloud_labelsG']: data[1],
+                     ops['cloud_labelsD']: data[1],
+                     ops['point_cloudsD']: data[0],
+                     ops['noise']: normal_noise}
+        summary, step, lossG, lossD, pred_val, predDG, predD = sess.run([ops['merged'], ops['stepD'],
+                                                                            ops['lossG'],
+                                                                            ops['lossD'], ops['predD'],
+                                                                            ops['predDG'], ops['predD']],
+                                                                           feed_dict=feed_dict)
+        summary, step, lossG, lossD, pred_val, predDG1, predD1 = sess.run([ops['merged'], ops['stepD'],
+                                                                            ops['lossG'],
+                                                                            ops['lossD'], ops['predD'],
+                                                                            ops['predDG'], ops['predD']],
+                                                                           feed_dict=feed_dict)
+        print('%.10f' % np.mean(predDG[0]))
+        print('%.10f' % np.mean(predD[0][32:, :] - predDG[0]))
+        print('%.10f' % np.mean(predD[0][:32, :] - predDG[0]))
+        print('%.10f' % np.mean(predD1[0] - predD[0]))
+        print('%.10f' % np.mean(predDG1[0] - predDG[0]))
+        break
+
 
 
 if __name__ == "__main__":
