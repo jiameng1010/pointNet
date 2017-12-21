@@ -249,7 +249,8 @@ def train():
     cloud_labelsG = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 41))
     point_cloudsD = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 1024, 3))
     cloud_labelsD = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 41))
-    noise = tf.placeholder(dtype=tf.float32, shape=(FLAGS.batch_size, FLAGS.noise_dims))
+    noise = tf.random_normal((FLAGS.batch_size, FLAGS.noise_dims))
+    #noise = tf.placeholder(dtype=tf.float32, shape=(FLAGS.batch_size, FLAGS.noise_dims))
     gt_trainD = tf.placeholder(tf.int32, shape=(2*FLAGS.batch_size))
     gt_trainG = tf.placeholder(tf.int32, shape=(FLAGS.batch_size))
 
@@ -311,7 +312,6 @@ def train():
 
         ops = {'labels_plD': gt_trainD,
                'labels_plG': gt_trainG,
-               'noise': noise,
                 'predG': G_output,
                 'predD': D_output_trainD,
                 'predDG': D_output_trainG,
@@ -352,14 +352,12 @@ def trainG(sess, ops, train_writer):
     AgGsum = 0
     num = 0
     for data in generator:
-        normal_noise = np.random.randn(FLAGS.batch_size, FLAGS.noise_dims)
         num += 1
         feed_dict = {ops['labels_plG']: data[2],
                      ops['labels_plD']: np.concatenate((data[2], 40*np.ones(shape=(BATCH_SIZE), dtype=float)), axis=0),
                      ops['cloud_labelsG']: data[1],
                      ops['cloud_labelsD']: data[1],
-                     ops['point_cloudsD']: data[0],
-                     ops['noise']: normal_noise}
+                     ops['point_cloudsD']: data[0]}
         summary, step, _, lossG, lossD, pred_val, AcD, AcG, AgD, AgG = sess.run([ops['merged'], ops['stepG'],
                                                                                  ops['train_opG'], ops['lossG'],
                                                                                  ops['lossD'], ops['predG'],
@@ -398,14 +396,12 @@ def trainD(sess, ops, train_writer):
     AgGsum = 0
     num = 0
     for data in generator:
-        normal_noise = np.random.randn(FLAGS.batch_size, FLAGS.noise_dims)
         num += 1
         feed_dict = {ops['labels_plG']: data[2],
                      ops['labels_plD']: np.concatenate((data[2], 40*np.ones(shape=(BATCH_SIZE), dtype=float)), axis=0),
                      ops['cloud_labelsG']: data[1],
                      ops['cloud_labelsD']: data[1],
-                     ops['point_cloudsD']: data[0],
-                     ops['noise']: normal_noise}
+                     ops['point_cloudsD']: data[0]}
         summary, step, _, lossG, lossD, pred_val, AcD, AcG, AgD, AgG = sess.run([ops['merged'], ops['stepD'],
                                                                                  ops['train_opD'], ops['lossG'],
                                                                                  ops['lossD'], ops['predD'],
