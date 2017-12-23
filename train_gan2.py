@@ -117,11 +117,11 @@ def get_model(point_cloud, is_training, one_hot_labels, bn_decay=None,):
 
     net = tf_util.conv2d(input_image, 64, [1,3],
                          padding='VALID', stride=[1,1],
-                         bn=False, is_training=is_training,
+                         bn=True, is_training=is_training,
                          scope='conv1', bn_decay=bn_decay)
     net = tf_util.conv2d(net, 64, [1,1],
                          padding='VALID', stride=[1,1],
-                         bn=False, is_training=is_training,
+                         bn=True, is_training=is_training,
                          scope='conv2', bn_decay=bn_decay)
 
     with tf.variable_scope('transform_net2', reuse=tf.AUTO_REUSE) as sc:
@@ -133,15 +133,15 @@ def get_model(point_cloud, is_training, one_hot_labels, bn_decay=None,):
 
     net = tf_util.conv2d(net_transformed, 64, [1,1],
                          padding='VALID', stride=[1,1],
-                         bn=False, is_training=is_training,
+                         bn=True, is_training=is_training,
                          scope='conv3', bn_decay=bn_decay)
     net = tf_util.conv2d(net, 128, [1,1],
                          padding='VALID', stride=[1,1],
-                         bn=False, is_training=is_training,
+                         bn=True, is_training=is_training,
                          scope='conv4', bn_decay=bn_decay)
     net = tf_util.conv2d(net, 1024, [1,1],
                          padding='VALID', stride=[1,1],
-                         bn=False, is_training=is_training,
+                         bn=True, is_training=is_training,
                          scope='conv5', bn_decay=bn_decay)
 
     # Symmetric function: max pooling
@@ -149,11 +149,11 @@ def get_model(point_cloud, is_training, one_hot_labels, bn_decay=None,):
                              padding='VALID', scope='maxpool')
 
     net = tf.reshape(net, [batch_size, -1])
-    net = tf_util.fully_connected(net, 512, bn=False, is_training=is_training,
+    net = tf_util.fully_connected(net, 512, bn=True, is_training=is_training,
                                   scope='fc1', bn_decay=bn_decay)
     net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
                           scope='dp1')
-    net = tf_util.fully_connected(net, 256, bn=False, is_training=is_training,
+    net = tf_util.fully_connected(net, 256, bn=True, is_training=is_training,
                                   scope='fc2', bn_decay=bn_decay)
     net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
                           scope='dp2')

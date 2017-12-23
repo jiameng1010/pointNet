@@ -142,7 +142,7 @@ def conv2d(inputs,
   Returns:
     Variable tensor
   """
-  with tf.variable_scope(scope) as sc:
+  with tf.variable_scope(scope, reuse=tf.AUTO_REUSE) as sc:
       kernel_h, kernel_w = kernel_size
       num_in_channels = inputs.get_shape()[-1].value
       kernel_shape = [kernel_h, kernel_w,
@@ -465,12 +465,10 @@ def batch_norm_template(inputs, is_training, scope, moments_dims, bn_decay):
   Return:
       normed:        batch-normalized maps
   """
-  with tf.variable_scope(scope) as sc:
+  with tf.variable_scope(scope, reuse=tf.AUTO_REUSE) as sc:
     num_channels = inputs.get_shape()[-1].value
-    beta = tf.Variable(tf.constant(0.0, shape=[num_channels]),
-                       name='beta', trainable=True)
-    gamma = tf.Variable(tf.constant(1.0, shape=[num_channels]),
-                        name='gamma', trainable=True)
+    beta = tf.get_variable(name='beta', initializer=tf.constant(0.0, shape=[num_channels]), trainable=True)
+    gamma = tf.get_variable(name='gamma', initializer=tf.constant(1.0, shape=[num_channels]), trainable=True)
     batch_mean, batch_var = tf.nn.moments(inputs, moments_dims, name='moments')
     decay = bn_decay if bn_decay is not None else 0.9
     ema = tf.train.ExponentialMovingAverage(decay=decay)
