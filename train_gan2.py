@@ -255,6 +255,9 @@ def train():
     gt_trainG = tf.placeholder(tf.int32, shape=(FLAGS.batch_size))
 
     ## setup models
+    incomplete_features = tf.Graph()
+    with incomplete_features.as_default():
+        pred, end_points, G_features = MODEL.get_model(point_cloudsG, tf.constant(False), bn_decay=bn_decay)
     with tf.variable_scope('Generator'):
         G_input = noise, cloud_labelsG
         G_output = conditional_generator(G_input)
