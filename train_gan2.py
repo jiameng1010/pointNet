@@ -359,14 +359,16 @@ def train():
         sess.run(init)
 
         for epoch in range(200):
-            log_string('**** EPOCH %03d ****' % (epoch))
+            log_string('******************************* EPOCH %03d ******************************' % (epoch))
             if not epoch == 0:
-                trainG(sess, sess2, ops, train_writer)
-            if epoch > 10:
+                while(True):
+                    acc = trainG(sess, sess2, ops, train_writer)
+                    if acc > 0.2:
+                        break
+            if epoch > 1:
                 trainD_bound(sess, sess2, ops, train_writer)
             else:
                 trainD(sess, sess2, ops, train_writer)
-            trainG(sess, sess2, ops, train_writer)
         print('Done!')
 
 def trainG(sess, sess2, ops, train_writer):
@@ -412,10 +414,11 @@ def trainG(sess, sess2, ops, train_writer):
     log_string('accuracy_classification_trainG: %f' % (AcGsum/num))
     log_string('accuracy_gan_trainD: %f' % (AgDsum/num))
     log_string('accuracy_gan_trainG: %f' % (AgGsum/num))
+    return (AcGsum/num)
 
 
 def trainD(sess, sess2, ops, train_writer):
-    log_string('train DDDDDDDDDDDDDDDD')
+    log_string('train DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD')
     generator = provide_data(sess2)
     loss_sumG = 0
     loss_sumD = 0
