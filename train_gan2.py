@@ -209,10 +209,12 @@ def generate_cloud(feature, noise):
 
     feature = tf.concat([feature, noise], axis=2)
     point = layers.fully_connected(feature, 256)
-    point = layers.fully_connected(point, 64)
+    point = layers.dropout(point, keep_prob=0.8)
+    #point = layers.fully_connected(point, 64)
     point = layers.fully_connected(point, 32)
-    point = layers.fully_connected(point, 16, activation_fn=tf.nn.softsign)
-    point = layers.fully_connected(point, 3, activation_fn=tf.nn.softsign)
+    point = layers.dropout(point, keep_prob=0.8)
+    #point = layers.fully_connected(point, 16, activation_fn=tf.nn.softsign)
+    point = layers.fully_connected(point, 3, activation_fn=None)
 
     return point
 
@@ -231,7 +233,7 @@ def conditional_generator(inputs):
         net = tf.concat([net, partial_feature], axis=1)
         feature = layers.fully_connected(net, 1024)
 
-    noise2 = tf.random_normal([32, 1024, 128])
+    noise2 = tf.random_normal([32, 1024, 16])
     #noise2 = tf.to_float(tf.constant(np.zeros([32, 1024, 128])))
     cloud = generate_cloud(tf.expand_dims(feature, axis=1), noise2)
 
@@ -363,7 +365,7 @@ def train():
             if not epoch == 0:
                 acc = trainG(sess, sess2, ops, train_writer)
             if epoch > 1:
-                trainD_bound(sess, sess2, ops, train_writer)
+                trainD(sess, sess2, ops, train_writer)
             else:
                 trainD(sess, sess2, ops, train_writer)
             acc = trainG(sess, sess2, ops, train_writer)
@@ -376,7 +378,7 @@ def train():
                     if acc > 0.2:
                         break
             if epoch > 1:
-                trainD_bound(sess, sess2, ops, train_writer)
+                trainD(sess, sess2, ops, train_writer)
             else:
                 trainD(sess, sess2, ops, train_writer)
         print('Done!')
