@@ -358,7 +358,17 @@ def train():
         init = tf.global_variables_initializer()
         sess.run(init)
 
-        for epoch in range(200):
+        for epoch in range(10):
+            log_string('******************************* EPOCH %03d ******************************' % (epoch))
+            if not epoch == 0:
+                acc = trainG(sess, sess2, ops, train_writer)
+            if epoch > 1:
+                trainD_bound(sess, sess2, ops, train_writer)
+            else:
+                trainD(sess, sess2, ops, train_writer)
+            acc = trainG(sess, sess2, ops, train_writer)
+
+        for epoch in range(10, 200):
             log_string('******************************* EPOCH %03d ******************************' % (epoch))
             if not epoch == 0:
                 while(True):
