@@ -245,7 +245,7 @@ def train():
     stepsD = tf.Variable(0)
 
     ## setup input data
-    point_cloudsG = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 1024, 3))
+
     cloud_labelsG = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 41))
     point_cloudsD = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 1024, 3))
     cloud_labelsD = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 41))
@@ -256,8 +256,9 @@ def train():
 
     ## setup models
     incomplete_features = tf.Graph()
-    with incomplete_features.as_default():
-        pred, end_points, G_features = MODEL.get_model(point_cloudsG, tf.constant(False), bn_decay=bn_decay)
+    #with incomplete_features.as_default():
+    #    point_cloudsG = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 1024, 3))
+    #    pred, end_points, G_features = MODEL.get_model(point_cloudsG, tf.constant(False))
     with tf.variable_scope('Generator'):
         G_input = noise, cloud_labelsG
         G_output = conditional_generator(G_input)
@@ -304,9 +305,13 @@ def train():
     D_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'Discriminator')
     train_opD = optimizerD.minimize(lossD, global_step=stepsD, var_list=D_vars)
 
-
-
-
+    with tf.device('/gpu:0'):
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+        config.allow_soft_placement = True
+        config.log_device_placement = False
+        sess2 = tf.Session(graph=incomplete_features, config=config)
+        tf.saved_model.loader.load(sess2, 'feature_net', './log/model')
     with tf.Session() as sess:
         ## summary writer
         merged = tf.summary.merge_all()
