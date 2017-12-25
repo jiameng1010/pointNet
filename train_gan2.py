@@ -364,9 +364,12 @@ def train():
             log_string('******************************* EPOCH %03d ******************************' % (epoch))
             if not epoch == 0:
                 acc = trainG(sess, sess2, ops, train_writer)
-            if epoch > 1:
+            if epoch >= 1:
                 trainD(sess, sess2, ops, train_writer)
             else:
+                trainD(sess, sess2, ops, train_writer)
+                trainD(sess, sess2, ops, train_writer)
+                trainD(sess, sess2, ops, train_writer)
                 trainD(sess, sess2, ops, train_writer)
             acc = trainG(sess, sess2, ops, train_writer)
 
