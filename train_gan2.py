@@ -50,8 +50,8 @@ DECAY_RATE = FLAGS.decay_rate
 
 MODEL = importlib.import_module(FLAGS.model)
 
-LOG_DIR = './log/gan_log'
-LOG_FOUT = open(os.path.join('./log/gan_log', 'log_train.txt'), 'w')
+LOG_DIR = './log/gan_log_1'
+LOG_FOUT = open(os.path.join('./log/gan_log_1', 'log_train.txt'), 'w')
 LOG_FOUT.write(str(FLAGS)+'\n')
 def log_string(out_str):
     LOG_FOUT.write(out_str+'\n')
@@ -380,10 +380,12 @@ def train():
                     acc = trainG(sess, sess2, ops, train_writer)
                     if acc > 0.2:
                         break
-            if epoch > 1:
-                trainD(sess, sess2, ops, train_writer)
-            else:
-                trainD(sess, sess2, ops, train_writer)
+            trainD(sess, sess2, ops, train_writer)
+            if epoch % 10 == 0:
+                builder = tf.saved_model.builder.SavedModelBuilder(LOG_DIR + '/model_in_epoch_' + str(epoch))
+                builder.add_meta_graph_and_variables(sess, 'GAN')
+                builder.save()
+                del builder
         print('Done!')
 
 def trainG(sess, sess2, ops, train_writer):
@@ -419,9 +421,10 @@ def trainG(sess, sess2, ops, train_writer):
         train_writer.add_summary(summary, step)
         loss_sumG += lossG
         loss_sumD += lossD
-        if np.random.rand() <= 0.002:
-            h5r = h5py.File((LOG_DIR + '/demo' + str(step) + '.h5'), 'w')
+        if np.random.rand() <= 0.001:
+            h5r = h5py.File((LOG_DIR + '/demo/demo' + str(step).zfill(6) + '.h5'), 'w')
             h5r.create_dataset('data', data=pred_val)
+            h5r.create_dataset('label', data=data[5])
             h5r.close()
     log_string('total lossG: %f' % loss_sumG)
     log_string('total lossD: %f' % loss_sumD)
