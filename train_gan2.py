@@ -65,7 +65,7 @@ def get_learning_rateG(batch):
                         DECAY_STEP,          # Decay step.
                         DECAY_RATE,          # Decay rate.
                         staircase=True)
-    learning_rate = tf.maximum(learning_rate, 0.0001) # CLIP THE LEARNING RATE!
+    learning_rate = tf.maximum(learning_rate, 0.0005) # CLIP THE LEARNING RATE!
     return learning_rate
 
 def get_learning_rateD(batch):
