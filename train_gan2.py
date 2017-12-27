@@ -65,7 +65,7 @@ def get_learning_rateG(batch):
                         DECAY_STEP,          # Decay step.
                         DECAY_RATE,          # Decay rate.
                         staircase=True)
-    learning_rate = tf.maximum(learning_rate, 0.00001) # CLIP THE LEARNING RATE!
+    learning_rate = tf.maximum(learning_rate, 0.0001) # CLIP THE LEARNING RATE!
     return learning_rate
 
 def get_learning_rateD(batch):
@@ -75,7 +75,7 @@ def get_learning_rateD(batch):
                         DECAY_STEP,          # Decay step.
                         DECAY_RATE,          # Decay rate.
                         staircase=True)
-    learning_rate = tf.maximum(learning_rate, 0.000001) # CLIP THE LEARNING RATE!
+    learning_rate = tf.maximum(learning_rate, 0.00001) # CLIP THE LEARNING RATE!
     return learning_rate
 
 def provide_data(sess2):
@@ -369,8 +369,6 @@ def train():
             else:
                 trainD(sess, sess2, ops, train_writer)
                 trainD(sess, sess2, ops, train_writer)
-                trainD(sess, sess2, ops, train_writer)
-                trainD(sess, sess2, ops, train_writer)
             acc = trainG(sess, sess2, ops, train_writer)
 
         for epoch in range(10, 200):
@@ -381,7 +379,7 @@ def train():
                     if acc > 0.2:
                         break
             trainD(sess, sess2, ops, train_writer)
-            if epoch % 10 == 0:
+            if epoch % 100 == 0:
                 builder = tf.saved_model.builder.SavedModelBuilder(LOG_DIR + '/model_in_epoch_' + str(epoch))
                 builder.add_meta_graph_and_variables(sess, 'GAN')
                 builder.save()
@@ -422,7 +420,7 @@ def trainG(sess, sess2, ops, train_writer):
         loss_sumG += lossG
         loss_sumD += lossD
         if np.random.rand() <= 0.001:
-            h5r = h5py.File((LOG_DIR + '/demo/demo' + str(step).zfill(6) + '.h5'), 'w')
+            h5r = h5py.File((LOG_DIR + '/demo/demo' + str(step).zfill(8) + '.h5'), 'w')
             h5r.create_dataset('data', data=pred_val)
             h5r.create_dataset('label', data=data[5])
             h5r.close()
