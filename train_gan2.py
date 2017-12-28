@@ -294,7 +294,7 @@ def train():
     lossD = MODEL.get_loss(D_output_trainD[0], gt_trainD, D_output_trainD[1])
     lossG1 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=D_output_trainG[0], labels=gt_trainG)
     lossG2 = density_penalty(G_output)
-    lossG = tf.reduce_mean(lossG1)# - tf.reduce_mean(tf.reduce_mean((1e-3)*lossG2))
+    lossG = tf.reduce_mean(lossG1) - tf.reduce_mean(tf.reduce_mean((1e-3)*lossG2))
     #lossG = -tf.reduce_mean((1e-3)*lossG2)
     tf.summary.scalar('lossD', lossD)
     tf.summary.scalar('lossG', lossG)
@@ -377,7 +377,7 @@ def train():
             if not epoch == 0:
                 while(True):
                     acc = trainG(sess, sess2, ops, train_writer)
-                    if acc > 0.2:
+                    if acc > 0.5:
                         break
             trainD(sess, sess2, ops, train_writer)
             if epoch % 100 == 0:
