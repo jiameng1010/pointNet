@@ -374,9 +374,11 @@ def train():
         for epoch in range(10, 200):
             log_string('******************************* EPOCH %03d ******************************' % (epoch))
             if not epoch == 0:
+                repeat = 0
                 while(True):
+                    repeat += 1
                     acc = trainG(sess, sess2, ops, train_writer)
-                    if acc > 0.5:
+                    if (acc > 0.5) or (repeat == 10):
                         break
             trainD(sess, sess2, ops, train_writer)
             if epoch % 100 == 0:
