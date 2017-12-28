@@ -50,8 +50,8 @@ DECAY_RATE = FLAGS.decay_rate
 
 MODEL = importlib.import_module(FLAGS.model)
 
-LOG_DIR = './log/gan_log_3'
-LOG_FOUT = open(os.path.join('./log/gan_log_3', 'log_train.txt'), 'w')
+LOG_DIR = './log/gan_log_4'
+LOG_FOUT = open(os.path.join('./log/gan_log_4', 'log_train.txt'), 'w')
 LOG_FOUT.write(str(FLAGS)+'\n')
 def log_string(out_str):
     LOG_FOUT.write(out_str+'\n')
@@ -210,10 +210,9 @@ def generate_cloud(feature, noise):
     feature = tf.concat([feature, noise], axis=2)
     point = layers.fully_connected(feature, 256)
     point = layers.dropout(point, keep_prob=0.8)
-    #point = layers.fully_connected(point, 64)
+    point = layers.fully_connected(point, 64)
     point = layers.fully_connected(point, 32)
-    point = layers.dropout(point, keep_prob=0.8)
-    #point = layers.fully_connected(point, 16, activation_fn=tf.nn.softsign)
+    point = layers.fully_connected(point, 16)
     point = layers.fully_connected(point, 3, activation_fn=tf.nn.softsign)
 
     return point
