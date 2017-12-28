@@ -50,8 +50,8 @@ DECAY_RATE = FLAGS.decay_rate
 
 MODEL = importlib.import_module(FLAGS.model)
 
-LOG_DIR = './log/gan_log_2'
-LOG_FOUT = open(os.path.join('./log/gan_log_2', 'log_train.txt'), 'w')
+LOG_DIR = './log/gan_log_3'
+LOG_FOUT = open(os.path.join('./log/gan_log_3', 'log_train.txt'), 'w')
 LOG_FOUT.write(str(FLAGS)+'\n')
 def log_string(out_str):
     LOG_FOUT.write(out_str+'\n')
