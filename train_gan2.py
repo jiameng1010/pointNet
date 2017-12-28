@@ -226,9 +226,10 @@ def conditional_generator(inputs):
             activation_fn=tf.nn.relu, normalizer_fn=layers.batch_norm,
             weights_regularizer=layers.l2_regularizer(2.5e-5)):
 
+        net = tf.concat([noise, cloud_labels], axis=1)
         net = layers.fully_connected(noise, 256)
         net = tf.concat([net, cloud_labels], axis=1)
-        net = tfgan.features.condition_tensor_from_onehot(net, cloud_labels)
+        #net = tfgan.features.condition_tensor_from_onehot(net, cloud_labels)
         net = layers.fully_connected(net, 512)
         net = tf.concat([net, partial_feature, cloud_labels], axis=1)
         feature = layers.fully_connected(net, 1024)
