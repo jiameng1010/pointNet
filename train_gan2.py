@@ -32,7 +32,7 @@ parser.add_argument('--optimizer', default='adam', help='adam or momentum [defau
 parser.add_argument('--decay_step', type=int, default=200000, help='Decay step for lr decay [default: 200000]')
 parser.add_argument('--decay_rate', type=float, default=0.7, help='Decay rate for lr decay [default: 0.8]')
 FLAGS = parser.parse_args()
-FLAGS.noise_dims = 128
+FLAGS.noise_dims = 32
 FLAGS.max_number_of_steps = 120
 
 MAX_NUM_POINT = 2048
@@ -226,10 +226,15 @@ def conditional_generator(inputs):
             activation_fn=tf.nn.relu, normalizer_fn=layers.batch_norm,
             weights_regularizer=layers.l2_regularizer(2.5e-5)):
 
-        net = tf.concat([noise, cloud_labels], axis=1)
-        net = layers.fully_connected(noise, 256)
-        net = tf.concat([net, cloud_labels], axis=1)
-        #net = tfgan.features.condition_tensor_from_onehot(net, cloud_labels)
+        net = layers.fully_connected(noise, 64)
+        with tf.variable_scope('conditioning1'):
+            net = tfgan.features.condition_tensor_from_onehot(net, cloud_labels, 64)
+        net = layers.fully_connected(net, 128)
+        with tf.variable_scope('conditioning2'):
+            net = tfgan.features.condition_tensor_from_onehot(net, cloud_labels, 128)
+        net = layers.fully_connected(net, 256)
+        with tf.variable_scope('conditioning3'):
+            net = tfgan.features.condition_tensor_from_onehot(net, cloud_labels)
         net = layers.fully_connected(net, 512)
         net = tf.concat([net, partial_feature, cloud_labels], axis=1)
         feature = layers.fully_connected(net, 1024)
@@ -379,7 +384,7 @@ def train():
                 while(True):
                     repeat += 1
                     acc = trainG(sess, sess2, ops, train_writer)
-                    if (acc > 0.5) or (repeat == 10):
+                    if (acc > 0.5) or (repeat == 5):
                         break
             trainD(sess, sess2, ops, train_writer)
             if epoch % 100 == 0:
