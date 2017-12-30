@@ -133,11 +133,11 @@ def get_model(point_cloud, is_training, bn_decay=None,):
     net = tf_util.conv2d(input_image, 64, [1,3],
                          padding='VALID', stride=[1,1],
                          bn=False, is_training=is_training,
-                         scope='conv1', bn_decay=bn_decay)
+                         scope='conv1', bn_decay=bn_decay, activation_fn=tf.nn.leaky_relu)
     net = tf_util.conv2d(net, 64, [1,1],
                          padding='VALID', stride=[1,1],
                          bn=False, is_training=is_training,
-                         scope='conv2', bn_decay=bn_decay)
+                         scope='conv2', bn_decay=bn_decay, activation_fn=tf.nn.leaky_relu)
 
     with tf.variable_scope('transform_net2', reuse=tf.AUTO_REUSE) as sc:
         transform = feature_transform_net_no_bn(net, is_training, bn_decay, K=64)
@@ -149,15 +149,15 @@ def get_model(point_cloud, is_training, bn_decay=None,):
     net = tf_util.conv2d(net_transformed, 64, [1,1],
                          padding='VALID', stride=[1,1],
                          bn=False, is_training=is_training,
-                         scope='conv3', bn_decay=bn_decay)
+                         scope='conv3', bn_decay=bn_decay, activation_fn=tf.nn.leaky_relu)
     net = tf_util.conv2d(net, 128, [1,1],
                          padding='VALID', stride=[1,1],
                          bn=False, is_training=is_training,
-                         scope='conv4', bn_decay=bn_decay)
+                         scope='conv4', bn_decay=bn_decay, activation_fn=tf.nn.leaky_relu)
     net = tf_util.conv2d(net, 1024, [1,1],
                          padding='VALID', stride=[1,1],
                          bn=False, is_training=is_training,
-                         scope='conv5', bn_decay=bn_decay)
+                         scope='conv5', bn_decay=bn_decay, activation_fn=tf.nn.leaky_relu)
 
     # Symmetric function: max pooling
     net = tf_util.max_pool2d(net, [num_point,1],
@@ -165,11 +165,11 @@ def get_model(point_cloud, is_training, bn_decay=None,):
 
     net = tf.reshape(net, [batch_size, -1])
     net = tf_util.fully_connected(net, 512, bn=False, is_training=is_training,
-                                  scope='fc1', bn_decay=bn_decay)
+                                  scope='fc1', bn_decay=bn_decay, activation_fn=tf.nn.leaky_relu)
     net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
                           scope='dp1')
     net = tf_util.fully_connected(net, 256, bn=False, is_training=is_training,
-                                  scope='fc2', bn_decay=bn_decay)
+                                  scope='fc2', bn_decay=bn_decay, activation_fn=tf.nn.leaky_relu)
     net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
                           scope='dp2')
     net = tf_util.fully_connected(net, 41, activation_fn=None, scope='fc3')
@@ -208,12 +208,13 @@ def generate_cloud(feature, noise):
     #noise = tf.concat([noise, noise], axis=1)#1024
 
     feature = tf.concat([feature, noise], axis=2)
-    point = layers.fully_connected(feature, 256)
+    point = layers.fully_connected(feature, 256, activation_fn=tf.nn.leaky_relu)
     point = layers.dropout(point, keep_prob=0.8)
-    point = layers.fully_connected(point, 64)
-    point = layers.fully_connected(point, 32)
-    point = layers.fully_connected(point, 16)
-    point = layers.fully_connected(point, 3, activation_fn=tf.nn.softsign)
+    point = layers.fully_connected(point, 128, activation_fn=tf.nn.leaky_relu)
+    point = layers.dropout(point, keep_prob=0.8)
+    point = layers.fully_connected(point, 32, activation_fn=tf.nn.leaky_relu)
+    point = layers.fully_connected(point, 16, activation_fn=tf.nn.leaky_relu)
+    point = layers.fully_connected(point, 3, activation_fn=tf.nn.tanh)
 
     return point
 
@@ -226,17 +227,17 @@ def conditional_generator(inputs):
             activation_fn=tf.nn.relu, normalizer_fn=layers.batch_norm,
             weights_regularizer=layers.l2_regularizer(2.5e-5)):
 
-        net = layers.fully_connected(noise, 64)
+        net = layers.fully_connected(noise, 64, activation_fn=tf.nn.leaky_relu)
         with tf.variable_scope('conditioning1'):
             net = tfgan.features.condition_tensor_from_onehot(net, cloud_labels, 64)
-        net = layers.fully_connected(net, 128)
+        net = layers.fully_connected(net, 128, activation_fn=tf.nn.leaky_relu)
         with tf.variable_scope('conditioning2'):
             net = tfgan.features.condition_tensor_from_onehot(net, cloud_labels, 128)
-        net = layers.fully_connected(net, 256)
+        net = layers.fully_connected(net, 256, activation_fn=tf.nn.leaky_relu)
         with tf.variable_scope('conditioning3'):
             net = tfgan.features.condition_tensor_from_onehot(net, cloud_labels)
-        net = layers.fully_connected(net, 512)
-        net = tf.concat([net, partial_feature, cloud_labels], axis=1)
+        net = layers.fully_connected(net, 512, activation_fn=tf.nn.leaky_relu)
+        net = tf.concat([net, partial_feature], axis=1)
         feature = layers.fully_connected(net, 1024)
 
     noise2 = tf.random_normal([32, 1024, 16])
@@ -377,14 +378,14 @@ def train():
                 trainD(sess, sess2, ops, train_writer)
             acc = trainG(sess, sess2, ops, train_writer)
 
-        for epoch in range(10, 200):
+        for epoch in range(10, 501):
             log_string('******************************* EPOCH %03d ******************************' % (epoch))
             if not epoch == 0:
                 repeat = 0
                 while(True):
                     repeat += 1
                     acc = trainG(sess, sess2, ops, train_writer)
-                    if (acc > 0.5) or (repeat == 5):
+                    if (acc > 0.5) or (repeat == 3):
                         break
             trainD(sess, sess2, ops, train_writer)
             if epoch % 100 == 0:
