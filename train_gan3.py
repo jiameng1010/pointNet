@@ -373,6 +373,7 @@ def train():
             log_string('******************************* EPOCH %03d ******************************' % (epoch))
             trainD(sess, sess2, ops, train_writer)
             trainG(sess, sess2, ops, train_writer)
+            trainD(sess, sess2, ops, train_writer)
             if epoch % 100 == 0:
                 builder = tf.saved_model.builder.SavedModelBuilder(LOG_DIR + '/model_in_epoch_' + str(epoch))
                 builder.add_meta_graph_and_variables(sess, 'GAN')
