@@ -283,7 +283,7 @@ def train():
     cloud_labelsD = tf.placeholder(dtype=tf.int32, shape=(BATCH_SIZE))
     #
     noise = tf.random_normal((FLAGS.batch_size, FLAGS.noise_dims))
-    gt_zeros = tf.constant(np.ones((32)), dtype=tf.int32)
+    gt_zeros = tf.constant(np.zeros((32)), dtype=tf.int32)
     gt_ones = tf.constant(np.ones((32)), dtype=tf.int32)
 
     ## setup models
