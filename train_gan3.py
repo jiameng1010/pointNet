@@ -8,7 +8,7 @@ import importlib
 import h5py
 import os
 import sys
-from tensorflow.python.ops import variable_scope
+from tensorflow.python.ops import variable_scope, embedding_ops
 from tensorflow.contrib.gan.python.losses.python import tuple_losses_impl as tfgan_losses
 from tensorflow.contrib.data import Dataset, Iterator
 
@@ -34,6 +34,7 @@ parser.add_argument('--decay_rate', type=float, default=0.7, help='Decay rate fo
 FLAGS = parser.parse_args()
 FLAGS.noise_dims = 32
 FLAGS.max_number_of_steps = 120
+FLAGS.embeding_dim = 32
 
 MAX_NUM_POINT = 2048
 NUM_CLASSES = 40
@@ -50,8 +51,8 @@ DECAY_RATE = FLAGS.decay_rate
 
 MODEL = importlib.import_module(FLAGS.model)
 
-LOG_DIR = './log/gan_log_6'
-LOG_FOUT = open(os.path.join('./log/gan_log_6', 'log_train.txt'), 'w')
+LOG_DIR = './log/gan_log_5'
+LOG_FOUT = open(os.path.join('./log/gan_log_5', 'log_train.txt'), 'w')
 LOG_FOUT.write(str(FLAGS)+'\n')
 def log_string(out_str):
     LOG_FOUT.write(out_str+'\n')
@@ -118,7 +119,7 @@ def provide_data(sess2):
         #out['labe'] = one_hot_labe
         yield jittered_data, one_hot_labe1, current_label[start_idx:end_idx], np.squeeze(G_features), one_hot_labe2, partial_label[start_idx:end_idx]
 
-def get_model(point_cloud, is_training, bn_decay=None,):
+def get_model(point_cloud, embedded_label, is_training, bn_decay=None,):
     """ Classification PointNet, input is BxNx3, output Bx40 """
     batch_size = point_cloud.get_shape()[0].value
     num_point = point_cloud.get_shape()[1].value
@@ -176,73 +177,13 @@ def get_model(point_cloud, is_training, bn_decay=None,):
 
     return net, end_points
 
-def get_model2(point_cloud, is_training, bn_decay=None,):
-    """ Classification PointNet, input is BxNx3, output Bx40 """
-    batch_size = point_cloud.get_shape()[0].value
-    num_point = point_cloud.get_shape()[1].value
-    end_points = {}
-
-    input_image = tf.expand_dims(point_cloud, -1)
-
-    net = tf_util.conv2d(input_image, 64, [1,3],
-                         padding='VALID', stride=[1,1],
-                         bn=False, is_training=is_training,
-                         scope='conv1', bn_decay=bn_decay, activation_fn=tf.nn.leaky_relu)
-    net = tf_util.conv2d(net, 64, [1,1],
-                         padding='VALID', stride=[1,1],
-                         bn=False, is_training=is_training,
-                         scope='conv2', bn_decay=bn_decay, activation_fn=tf.nn.leaky_relu)
-
-    with tf.variable_scope('transform_net2', reuse=tf.AUTO_REUSE) as sc:
-        transform = feature_transform_net_no_bn(net, is_training, bn_decay, K=64)
-
-    end_points['transform'] = transform
-    net_transformed = tf.matmul(tf.squeeze(net, axis=[2]), transform)
-    net_transformed = tf.expand_dims(net_transformed, [2])
-
-    net = tf_util.conv2d(net_transformed, 64, [1,1],
-                         padding='VALID', stride=[1,1],
-                         bn=False, is_training=is_training,
-                         scope='conv3', bn_decay=bn_decay, activation_fn=tf.nn.leaky_relu)
-    net = tf_util.conv2d(net, 128, [1,1],
-                         padding='VALID', stride=[1,1],
-                         bn=False, is_training=is_training,
-                         scope='conv4', bn_decay=bn_decay, activation_fn=tf.nn.leaky_relu)
-    net = tf_util.conv2d(net, 1024, [1,1],
-                         padding='VALID', stride=[1,1],
-                         bn=False, is_training=is_training,
-                         scope='conv5', bn_decay=bn_decay, activation_fn=tf.nn.leaky_relu)
-
-    # Symmetric function: max pooling
-    net = tf_util.max_pool2d(net, [num_point,1],
-                             padding='VALID', scope='maxpool')
-
-    net = tf.reshape(net, [batch_size, -1])
-    net = tf_util.fully_connected(net, 512, bn=False, is_training=is_training,
-                                  scope='fc1', bn_decay=bn_decay, activation_fn=tf.nn.leaky_relu)
-    net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
-                          scope='dp1')
-    net = tf_util.fully_connected(net, 256, bn=False, is_training=is_training,
-                                  scope='fc2', bn_decay=bn_decay, activation_fn=tf.nn.leaky_relu)
-    net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
-                          scope='dp2')
-    net = tf_util.fully_connected(net, 41, activation_fn=None, scope='fc3')
-
-    return net, end_points
-
-def conditional_discriminator(point_clouds):
+def conditional_discriminator(point_clouds, embedded_label):
     is_training_pl = tf.constant([True])
     # Get model and loss
     #with tf.variable_scope('Discriminator', reuse=tf.AUTO_REUSE):
-    pred, end_points = get_model(point_clouds, tf.squeeze(is_training_pl))
+    pred, end_points = get_model(point_clouds, embedded_label, tf.squeeze(is_training_pl))
     return pred, end_points
 
-def conditional_discriminator2(point_clouds):
-    is_training_pl = tf.constant([True])
-    # Get model and loss
-    #with tf.variable_scope('Discriminator', reuse=tf.AUTO_REUSE):
-    pred, end_points = get_model2(point_clouds, tf.squeeze(is_training_pl))
-    return pred, end_points
 
 def generate_cloud(feature, noise):
     feature = tf.concat([feature, feature], axis=1)#2
@@ -289,13 +230,13 @@ def conditional_generator(inputs):
 
         net = layers.fully_connected(noise, 64, activation_fn=tf.nn.leaky_relu)
         with tf.variable_scope('conditioning1'):
-            net = tfgan.features.condition_tensor_from_onehot(net, cloud_labels, 64)
+            net = tfgan.features.condition_tensor(net, cloud_labels)
         net = layers.fully_connected(net, 128, activation_fn=tf.nn.leaky_relu)
         with tf.variable_scope('conditioning2'):
-            net = tfgan.features.condition_tensor_from_onehot(net, cloud_labels, 128)
+            net = tfgan.features.condition_tensor(net, cloud_labels)
         net = layers.fully_connected(net, 256, activation_fn=tf.nn.leaky_relu)
         with tf.variable_scope('conditioning3'):
-            net = tfgan.features.condition_tensor_from_onehot(net, cloud_labels)
+            net = tfgan.features.condition_tensor(net, cloud_labels)
         net = layers.fully_connected(net, 512, activation_fn=tf.nn.leaky_relu)
         net = tf.concat([net, partial_feature], axis=1)
         feature = layers.fully_connected(net, 1024)
@@ -331,12 +272,15 @@ def train():
 
     ## setup input data
     partial_featureG = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 1024))
-    cloud_labelsG = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 41))
+    onehot_labelsG = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 41))
+    cloud_labelsG = tf.placeholder(dtype=tf.int32, shape=(BATCH_SIZE))
+    #
     point_cloudsD = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 1024, 3))
-    cloud_labelsD = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 41))
+    onehot_labelsD = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 41))
+    cloud_labelsD = tf.placeholder(dtype=tf.int32, shape=(BATCH_SIZE))
+    #
     noise = tf.random_normal((FLAGS.batch_size, FLAGS.noise_dims))
-    #noise = tf.placeholder(dtype=tf.float32, shape=(FLAGS.batch_size, FLAGS.noise_dims))
-    gt_trainD = tf.placeholder(tf.int32, shape=(2*FLAGS.batch_size))
+    gt_trainD = tf.placeholder(tf.int32, shape=(FLAGS.batch_size))
     gt_trainG = tf.placeholder(tf.int32, shape=(FLAGS.batch_size))
 
     ## setup models
@@ -344,16 +288,18 @@ def train():
     #with incomplete_features.as_default():
     #    point_cloudsG = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 1024, 3))
     #    pred, end_points, G_features = MODEL.get_model(point_cloudsG, tf.constant(False))
-    with tf.variable_scope('Generator'):
-        G_input = noise, cloud_labelsG, partial_featureG
+    with tf.variable_scope('Generator', reuse=tf.AUTO_REUSE):
+        embedding = variable_scope.get_variable('embedding', [40, FLAGS.embeding_dim])
+        embedded_label_D = embedding_ops.embedding_lookup(embedding, cloud_labelsD)
+        embedded_label_G = embedding_ops.embedding_lookup(embedding, cloud_labelsG)
+        G_input = noise, embedded_label_G, partial_featureG
         G_output = conditional_generator(G_input)
     with tf.variable_scope('Discriminator') as sc:
-        D_output_trainG = conditional_discriminator2(G_output)
-        #D_output_trainG = conditional_discriminator(G_output, cloud_labelsG)
+        D_output_trainG = conditional_discriminator(G_output, embedded_label_G)
         D_input1_trainD = tf.concat([point_cloudsD, G_output], axis=0)
         D_input2_trainD = tf.concat([cloud_labelsD, cloud_labelsG], axis=0)
         sc.reuse_variables()
-        D_output_trainD = conditional_discriminator(D_input1_trainD)
+        D_output_trainD = conditional_discriminator(point_cloudsD, cloud_labelsD)
 
 
     ## setup loss
