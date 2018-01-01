@@ -367,27 +367,10 @@ def train():
         init = tf.global_variables_initializer()
         sess.run(init)
 
-        for epoch in range(10):
+        for epoch in range(501):
             log_string('******************************* EPOCH %03d ******************************' % (epoch))
-            if not epoch == 0:
-                acc = trainG(sess, sess2, ops, train_writer)
-            if epoch >= 1:
-                trainD(sess, sess2, ops, train_writer)
-            else:
-                trainD(sess, sess2, ops, train_writer)
-                trainD(sess, sess2, ops, train_writer)
-            acc = trainG(sess, sess2, ops, train_writer)
-
-        for epoch in range(10, 501):
-            log_string('******************************* EPOCH %03d ******************************' % (epoch))
-            if not epoch == 0:
-                repeat = 0
-                while(True):
-                    repeat += 1
-                    acc = trainG(sess, sess2, ops, train_writer)
-                    if (acc > 0.5) or (repeat == 3):
-                        break
             trainD(sess, sess2, ops, train_writer)
+            trainG(sess, sess2, ops, train_writer)
             if epoch % 100 == 0:
                 builder = tf.saved_model.builder.SavedModelBuilder(LOG_DIR + '/model_in_epoch_' + str(epoch))
                 builder.add_meta_graph_and_variables(sess, 'GAN')
