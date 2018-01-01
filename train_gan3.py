@@ -165,6 +165,8 @@ def get_model(point_cloud, embedded_label, is_training, bn_decay=None,):
                              padding='VALID', scope='maxpool')
 
     net = tf.reshape(net, [batch_size, -1])
+    with tf.variable_scope('embeding_condition', reuse=tf.AUTO_REUSE):
+        net = tfgan.features.condition_tensor(net, embedded_label)####################
     net = tf_util.fully_connected(net, 512, bn=False, is_training=is_training,
                                   scope='fc1', bn_decay=bn_decay, activation_fn=tf.nn.leaky_relu)
     net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
@@ -173,7 +175,8 @@ def get_model(point_cloud, embedded_label, is_training, bn_decay=None,):
                                   scope='fc2', bn_decay=bn_decay, activation_fn=tf.nn.leaky_relu)
     net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
                           scope='dp2')
-    net = tf_util.fully_connected(net, 41, activation_fn=None, scope='fc3')
+    net = tf_util.fully_connected(net, 41, activation_fn=tf.nn.leaky_relu, scope='fc3')
+    net = tf_util.fully_connected(net, 2, activation_fn=tf.nn.softmax, scope='fc4')
 
     return net, end_points
 
@@ -280,8 +283,8 @@ def train():
     cloud_labelsD = tf.placeholder(dtype=tf.int32, shape=(BATCH_SIZE))
     #
     noise = tf.random_normal((FLAGS.batch_size, FLAGS.noise_dims))
-    gt_trainD = tf.placeholder(tf.int32, shape=(FLAGS.batch_size))
-    gt_trainG = tf.placeholder(tf.int32, shape=(FLAGS.batch_size))
+    gt_zeros = tf.constant(np.ones((32)), dtype=tf.int32)
+    gt_ones = tf.constant(np.ones((32)), dtype=tf.int32)
 
     ## setup models
     incomplete_features = tf.Graph()
@@ -296,35 +299,30 @@ def train():
         G_output = conditional_generator(G_input)
     with tf.variable_scope('Discriminator') as sc:
         D_output_trainG = conditional_discriminator(G_output, embedded_label_G)
-        D_input1_trainD = tf.concat([point_cloudsD, G_output], axis=0)
-        D_input2_trainD = tf.concat([cloud_labelsD, cloud_labelsG], axis=0)
+        #D_input1_trainD = tf.concat([point_cloudsD, G_output], axis=0)
+        #D_input2_trainD = tf.concat([cloud_labelsD, cloud_labelsG], axis=0)
         sc.reuse_variables()
-        D_output_trainD = conditional_discriminator(point_cloudsD, cloud_labelsD)
+        D_output_trainD = conditional_discriminator(point_cloudsD, embedded_label_D)
 
 
     ## setup loss
-    lossD = MODEL.get_loss(D_output_trainD[0], gt_trainD, D_output_trainD[1])
-    lossG1 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=D_output_trainG[0], labels=gt_trainG)
+    lossD1 = MODEL.get_loss(D_output_trainD[0], gt_ones, D_output_trainD[1])
+    lossD2 = MODEL.get_loss(D_output_trainG[0], gt_zeros, D_output_trainD[1])
+    lossD = lossD1 + lossD2
+    lossG1 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=D_output_trainG[0], labels=gt_ones)
     lossG2 = density_penalty(G_output)
     lossG = tf.reduce_mean(lossG1)# - tf.reduce_mean(tf.reduce_mean((1e-3)*lossG2))
-    #lossG = -tf.reduce_mean((1e-3)*lossG2)
     tf.summary.scalar('lossD', lossD)
     tf.summary.scalar('lossG', lossG)
 
-    correct_trainD = tf.equal(tf.argmax(D_output_trainD[0], 1), tf.to_int64(gt_trainD))
-    accuracy_classification_trainD = tf.reduce_sum(tf.cast(correct_trainD, tf.float32)) / float(2*BATCH_SIZE)
-    correct_trainG = tf.equal(tf.argmax(D_output_trainG[0], 1), tf.to_int64(gt_trainG))
+    correct_trainD1 = tf.equal(tf.argmax(D_output_trainD[0], 1), tf.to_int64(gt_ones))
+    correct_trainD2 = tf.equal(tf.argmax(D_output_trainG[0], 1), tf.to_int64(gt_zeros))
+    accuracy_classification_trainD = (tf.reduce_sum(tf.cast((correct_trainD1), tf.float32)) + tf.reduce_sum(tf.cast((correct_trainD2), tf.float32))) / float(2*BATCH_SIZE)
+    correct_trainG = tf.equal(tf.argmax(D_output_trainG[0], 1), tf.to_int64(gt_ones))
     accuracy_classification_trainG = tf.reduce_sum(tf.cast(correct_trainG, tf.float32)) / float(BATCH_SIZE)
     forty = tf.constant(40 * np.ones(shape=(BATCH_SIZE), dtype=int))
-    correct_gan_trainD1 = tf.less(tf.argmax(D_output_trainD[0], 1)[:BATCH_SIZE], tf.to_int64(forty))
-    correct_gan_trainD2 = tf.equal(tf.argmax(D_output_trainD[0], 1)[BATCH_SIZE:], tf.to_int64(forty))
-    accuracy_gan_trainD = tf.reduce_sum(tf.cast(tf.concat([correct_gan_trainD1, correct_gan_trainD2], axis=0), tf.float32)) / float(2*BATCH_SIZE)
-    correct_gan_trainG = tf.equal(tf.argmax(D_output_trainG[0], 1), tf.to_int64(forty))
-    accuracy_gan_trainG = tf.reduce_sum(tf.cast(correct_gan_trainG, tf.float32)) / float(BATCH_SIZE)
     tf.summary.scalar('accuracy_classification_trainD', accuracy_classification_trainD)
     tf.summary.scalar('accuracy_classification_trainG', accuracy_classification_trainG)
-    tf.summary.scalar('accuracy_gan_trainD', accuracy_gan_trainD)
-    tf.summary.scalar('accuracy_gan_trainG', accuracy_gan_trainG)
 
     ## setup optimizor
     learning_rateG = get_learning_rateG(stepsG)
@@ -349,9 +347,7 @@ def train():
         train_writer = tf.summary.FileWriter(os.path.join(LOG_DIR, 'train'), sess.graph)
         test_writer = tf.summary.FileWriter(os.path.join(LOG_DIR, 'test'))
 
-        ops = {'labels_plD': gt_trainD,
-               'labels_plG': gt_trainG,
-               'partial_featureG': partial_featureG,
+        ops = {'partial_featureG': partial_featureG,
                 'predG': G_output,
                 'predD': D_output_trainD,
                 'predDG': D_output_trainG,
@@ -366,9 +362,7 @@ def train():
                 'point_cloudsD': point_cloudsD,
                 'cloud_labelsD': cloud_labelsD,
                'accuracy_classification_trainD': accuracy_classification_trainD,
-               'accuracy_classification_trainG': accuracy_classification_trainG,
-               'accuracy_gan_trainD': accuracy_gan_trainD,
-               'accuracy_gan_trainG': accuracy_gan_trainG}
+               'accuracy_classification_trainG': accuracy_classification_trainG}
         # initialize the iterator and variable on the training data
         init = tf.global_variables_initializer()
         sess.run(init)
@@ -408,29 +402,21 @@ def trainG(sess, sess2, ops, train_writer):
     loss_sumD = 0
     AcDsum = 0
     AcGsum = 0
-    AgDsum = 0
-    AgGsum = 0
     num = 0
     for data in generator:
         num += 1
-        feed_dict = {ops['labels_plG']: data[5],
-                     ops['labels_plD']: np.concatenate((data[2], 40*np.ones(shape=(BATCH_SIZE), dtype=float)), axis=0),
-                     ops['cloud_labelsG']: data[4],
-                     ops['cloud_labelsD']: data[1],
+        feed_dict = {ops['cloud_labelsG']: data[5],
+                     ops['cloud_labelsD']: data[2],
                      ops['point_cloudsD']: data[0],
                      ops['partial_featureG']: data[3]}
-        summary, step, _, lossG, lossD, pred_val, AcD, AcG, AgD, AgG = sess.run([ops['merged'], ops['stepG'],
+        summary, step, _, lossG, lossD, pred_val, AcD, AcG = sess.run([ops['merged'], ops['stepG'],
                                                                                  ops['train_opG'], ops['lossG'],
                                                                                  ops['lossD'], ops['predG'],
                                                                                  ops['accuracy_classification_trainD'],
-                                                                                 ops['accuracy_classification_trainG'],
-                                                                                 ops['accuracy_gan_trainD'],
-                                                                                 ops['accuracy_gan_trainG']],
+                                                                                 ops['accuracy_classification_trainG']],
                                                                                 feed_dict=feed_dict)
         AcDsum += AcD
         AcGsum += AcG
-        AgDsum += AgD
-        AgGsum += AgG
         train_writer.add_summary(summary, step)
         loss_sumG += lossG
         loss_sumD += lossD
@@ -443,8 +429,6 @@ def trainG(sess, sess2, ops, train_writer):
     log_string('total lossD: %f' % loss_sumD)
     log_string('accuracy_classification_trainD: %f' % (AcDsum/num))
     log_string('accuracy_classification_trainG: %f' % (AcGsum/num))
-    log_string('accuracy_gan_trainD: %f' % (AgDsum/num))
-    log_string('accuracy_gan_trainG: %f' % (AgGsum/num))
     return (AcGsum/num)
 
 
@@ -455,38 +439,35 @@ def trainD(sess, sess2, ops, train_writer):
     loss_sumD = 0
     AcDsum = 0
     AcGsum = 0
-    AgDsum = 0
-    AgGsum = 0
     num = 0
     for data in generator:
         num += 1
-        feed_dict = {ops['labels_plG']: data[5],
-                     ops['labels_plD']: np.concatenate((data[2], 40*np.ones(shape=(BATCH_SIZE), dtype=float)), axis=0),
-                     ops['cloud_labelsG']: data[4],
-                     ops['cloud_labelsD']: data[1],
+        feed_dict = {ops['cloud_labelsG']: data[5],
+                     ops['cloud_labelsD']: data[2],
                      ops['point_cloudsD']: data[0],
                      ops['partial_featureG']: data[3]}
-        summary, step, _, lossG, lossD, pred_val, AcD, AcG, AgD, AgG = sess.run([ops['merged'], ops['stepD'],
+        summary, step, _, lossG, lossD, pred_val, AcD, AcG = sess.run([ops['merged'], ops['stepG'],
                                                                                  ops['train_opD'], ops['lossG'],
-                                                                                 ops['lossD'], ops['predD'],
+                                                                                 ops['lossD'], ops['predG'],
                                                                                  ops['accuracy_classification_trainD'],
-                                                                                 ops['accuracy_classification_trainG'],
-                                                                                 ops['accuracy_gan_trainD'],
-                                                                                 ops['accuracy_gan_trainG']],
+                                                                                 ops['accuracy_classification_trainG']],
                                                                                 feed_dict=feed_dict)
+        AcDsum += AcD
+        AcGsum += AcG
         train_writer.add_summary(summary, step)
         loss_sumG += lossG
         loss_sumD += lossD
-        AcDsum += AcD
-        AcGsum += AcG
-        AgDsum += AgD
-        AgGsum += AgG
+        if np.random.rand() <= 0.001:
+            h5r = h5py.File((LOG_DIR + '/demo/demo' + str(step).zfill(8) + '.h5'), 'w')
+            h5r.create_dataset('data', data=pred_val)
+            h5r.create_dataset('label', data=data[5])
+            h5r.close()
     log_string('total lossG: %f' % loss_sumG)
     log_string('total lossD: %f' % loss_sumD)
     log_string('accuracy_classification_trainD: %f' % (AcDsum/num))
     log_string('accuracy_classification_trainG: %f' % (AcGsum/num))
-    log_string('accuracy_gan_trainD: %f' % (AgDsum/num))
-    log_string('accuracy_gan_trainG: %f' % (AgGsum/num))
+    return (AcGsum/num)
+
 
 
 def trainD_bound(sess, sess2, ops, train_writer):
