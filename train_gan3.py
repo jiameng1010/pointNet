@@ -66,7 +66,7 @@ def get_learning_rateG(batch):
                         DECAY_STEP,          # Decay step.
                         DECAY_RATE,          # Decay rate.
                         staircase=True)
-    learning_rate = tf.maximum(learning_rate, 0.0005) # CLIP THE LEARNING RATE!
+    learning_rate = tf.maximum(learning_rate, 0.0001) # CLIP THE LEARNING RATE!
     return learning_rate
 
 def get_learning_rateD(batch):
@@ -76,7 +76,7 @@ def get_learning_rateD(batch):
                         DECAY_STEP,          # Decay step.
                         DECAY_RATE,          # Decay rate.
                         staircase=True)
-    learning_rate = tf.maximum(learning_rate, 0.00001) # CLIP THE LEARNING RATE!
+    learning_rate = tf.maximum(learning_rate, 0.0001) # CLIP THE LEARNING RATE!
     return learning_rate
 
 def provide_data(sess2):
@@ -291,10 +291,11 @@ def train():
     #with incomplete_features.as_default():
     #    point_cloudsG = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 1024, 3))
     #    pred, end_points, G_features = MODEL.get_model(point_cloudsG, tf.constant(False))
-    with tf.variable_scope('Generator', reuse=tf.AUTO_REUSE):
+    with tf.variable_scope('Embedding', reuse=tf.AUTO_REUSE):
         embedding = variable_scope.get_variable('embedding', [40, FLAGS.embeding_dim])
         embedded_label_D = embedding_ops.embedding_lookup(embedding, cloud_labelsD)
         embedded_label_G = embedding_ops.embedding_lookup(embedding, cloud_labelsG)
+    with tf.variable_scope('Generator', reuse=tf.AUTO_REUSE):
         G_input = noise, embedded_label_G, partial_featureG
         G_output = conditional_generator(G_input)
     with tf.variable_scope('Discriminator') as sc:
@@ -327,12 +328,13 @@ def train():
     ## setup optimizor
     learning_rateG = get_learning_rateG(stepsG)
     learning_rateD = get_learning_rateD(stepsD)
+    E_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'Embedding')
     optimizerG = tf.train.AdamOptimizer(learning_rateG)
     G_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'Generator')
-    train_opG = optimizerG.minimize(lossG, global_step=stepsG, var_list=G_vars)
+    train_opG = optimizerG.minimize(lossG, global_step=stepsG, var_list=[G_vars, E_vars])
     optimizerD = tf.train.AdamOptimizer(learning_rateD)
     D_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'Discriminator')
-    train_opD = optimizerD.minimize(lossD, global_step=stepsD, var_list=D_vars)
+    train_opD = optimizerD.minimize(lossD, global_step=stepsD, var_list=[D_vars, E_vars])
 
     with tf.device('/gpu:0'):
         config = tf.ConfigProto()
