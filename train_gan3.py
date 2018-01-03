@@ -272,6 +272,7 @@ def train():
     ## global steps
     stepsG = tf.Variable(0)
     stepsD = tf.Variable(0)
+    global_step = stepsD + stepsG
 
     ## setup input data
     partial_featureG = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 1024))
@@ -361,6 +362,7 @@ def train():
                 'merged': merged,
                 'stepG': stepsG,
                 'stepD': stepsD,
+                'global_step': global_step,
                 'cloud_labelsG': cloud_labelsG,
                 'point_cloudsD': point_cloudsD,
                 'cloud_labelsD': cloud_labelsD,
@@ -400,7 +402,7 @@ def trainG(sess, sess2, ops, train_writer):
                      ops['cloud_labelsD']: data[2],
                      ops['point_cloudsD']: data[0],
                      ops['partial_featureG']: data[3]}
-        summary, step, _, lossG, lossD, pred_val, AcD, AcG = sess.run([ops['merged'], ops['stepG'],
+        summary, step, _, lossG, lossD, pred_val, AcD, AcG = sess.run([ops['merged'], ops['global_step'],
                                                                                  ops['train_opG'], ops['lossG'],
                                                                                  ops['lossD'], ops['predG'],
                                                                                  ops['accuracy_classification_trainD'],
@@ -437,7 +439,7 @@ def trainD(sess, sess2, ops, train_writer):
                      ops['cloud_labelsD']: data[2],
                      ops['point_cloudsD']: data[0],
                      ops['partial_featureG']: data[3]}
-        summary, step, _, lossG, lossD, pred_val, AcD, AcG = sess.run([ops['merged'], ops['stepG'],
+        summary, step, _, lossG, lossD, pred_val, AcD, AcG = sess.run([ops['merged'], ops['global_step'],
                                                                                  ops['train_opD'], ops['lossG'],
                                                                                  ops['lossD'], ops['predG'],
                                                                                  ops['accuracy_classification_trainD'],
