@@ -61,22 +61,22 @@ def log_string(out_str):
 
 def get_learning_rateG(batch):
     learning_rate = tf.train.exponential_decay(
-                        BASE_LEARNING_RATE,  # Base learning rate.
+                        0.005,  # Base learning rate.
                         batch * BATCH_SIZE,  # Current index into the dataset.
                         DECAY_STEP,          # Decay step.
                         DECAY_RATE,          # Decay rate.
                         staircase=True)
-    learning_rate = tf.maximum(learning_rate, 0.000001) # CLIP THE LEARNING RATE!
+    learning_rate = tf.maximum(learning_rate, 0.0005) # CLIP THE LEARNING RATE!
     return learning_rate
 
 def get_learning_rateD(batch):
     learning_rate = tf.train.exponential_decay(
-                        BASE_LEARNING_RATE,  # Base learning rate.
+                        0.0001,  # Base learning rate.
                         batch * BATCH_SIZE,  # Current index into the dataset.
                         DECAY_STEP,          # Decay step.
                         DECAY_RATE,          # Decay rate.
                         staircase=True)
-    learning_rate = tf.maximum(learning_rate, 0.000001) # CLIP THE LEARNING RATE!
+    learning_rate = tf.maximum(learning_rate, 0.00001) # CLIP THE LEARNING RATE!
     return learning_rate
 
 def provide_data(sess2):
