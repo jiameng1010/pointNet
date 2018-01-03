@@ -288,17 +288,18 @@ def train():
 
     ## setup models
     incomplete_features = tf.Graph()
-    #with incomplete_features.as_default():
-    #    point_cloudsG = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 1024, 3))
-    #    pred, end_points, G_features = MODEL.get_model(point_cloudsG, tf.constant(False))
-    with tf.variable_scope('Embedding', reuse=tf.AUTO_REUSE):
-        embedding = variable_scope.get_variable('embedding', [40, FLAGS.embeding_dim])
-        embedded_label_D = embedding_ops.embedding_lookup(embedding, cloud_labelsD)
-        embedded_label_G = embedding_ops.embedding_lookup(embedding, cloud_labelsG)
+    #with tf.variable_scope('Embedding', reuse=tf.AUTO_REUSE):
+    #    embedding = variable_scope.get_variable('embedding', [40, FLAGS.embeding_dim])
+    #    embedded_label_D = embedding_ops.embedding_lookup(embedding, cloud_labelsD)
+    #    embedded_label_G = embedding_ops.embedding_lookup(embedding, cloud_labelsG)
     with tf.variable_scope('Generator', reuse=tf.AUTO_REUSE):
+        embeddingG = variable_scope.get_variable('embedding', [40, FLAGS.embeding_dim])
+        embedded_label_G = embedding_ops.embedding_lookup(embeddingG, cloud_labelsG)
         G_input = noise, embedded_label_G, partial_featureG
         G_output = conditional_generator(G_input)
     with tf.variable_scope('Discriminator') as sc:
+        embeddingD = variable_scope.get_variable('embedding', [40, FLAGS.embeding_dim])
+        embedded_label_D = embedding_ops.embedding_lookup(embeddingD, cloud_labelsD)
         D_output_trainG = conditional_discriminator(G_output, embedded_label_G)
         #D_input1_trainD = tf.concat([point_cloudsD, G_output], axis=0)
         #D_input2_trainD = tf.concat([cloud_labelsD, cloud_labelsG], axis=0)
@@ -328,13 +329,13 @@ def train():
     ## setup optimizor
     learning_rateG = get_learning_rateG(stepsG)
     learning_rateD = get_learning_rateD(stepsD)
-    E_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'Embedding')
+    #E_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'Embedding')
     optimizerG = tf.train.AdamOptimizer(learning_rateG)
     G_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'Generator')
-    train_opG = optimizerG.minimize(lossG, global_step=stepsG, var_list=[G_vars, E_vars])
+    train_opG = optimizerG.minimize(lossG, global_step=stepsG, var_list=[G_vars])
     optimizerD = tf.train.AdamOptimizer(learning_rateD)
     D_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'Discriminator')
-    train_opD = optimizerD.minimize(lossD, global_step=stepsD, var_list=[D_vars, E_vars])
+    train_opD = optimizerD.minimize(lossD, global_step=stepsD, var_list=[D_vars])
 
     with tf.device('/gpu:0'):
         config = tf.ConfigProto()
