@@ -176,7 +176,7 @@ def get_model(point_cloud, embedded_label, is_training, bn_decay=None,):
     net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
                           scope='dp2')
     net = tf_util.fully_connected(net, 41, activation_fn=tf.nn.leaky_relu, scope='fc3')
-    net = tf_util.fully_connected(net, 2, activation_fn=tf.nn.softmax, scope='fc4')
+    net = tf_util.fully_connected(net, 2, activation_fn=None, scope='fc4')
 
     return net, end_points
 
@@ -218,7 +218,7 @@ def generate_cloud(feature, noise):
     point = layers.dropout(point, keep_prob=0.8)
     point = layers.fully_connected(point, 32, activation_fn=tf.nn.leaky_relu)
     point = layers.fully_connected(point, 16, activation_fn=tf.nn.leaky_relu)
-    point = layers.fully_connected(point, 3, activation_fn=tf.nn.softsign)
+    point = layers.fully_connected(point, 3, activation_fn=tf.nn.tanh)
 
     return point
 
