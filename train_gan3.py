@@ -218,7 +218,7 @@ def generate_cloud(feature, noise):
     point = layers.dropout(point, keep_prob=0.8)
     point = layers.fully_connected(point, 32, activation_fn=tf.nn.leaky_relu)
     point = layers.fully_connected(point, 16, activation_fn=tf.nn.leaky_relu)
-    point = layers.fully_connected(point, 3, activation_fn=tf.nn.tanh)
+    point = layers.fully_connected(point, 3, activation_fn=tf.nn.)
 
     return point
 
