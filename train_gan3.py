@@ -369,12 +369,12 @@ def train():
         init = tf.global_variables_initializer()
         sess.run(init)
 
-        for epoch in range(6):
-            log_string('******************************* EPOCH %03d ******************************' % (epoch))
-            trainD(sess, sess2, ops, train_writer)
-            trainG(sess, sess2, ops, train_writer)
-            trainD(sess, sess2, ops, train_writer)
-        for epoch in range(6, 501):
+        #for epoch in range(6):
+        #    log_string('******************************* EPOCH %03d ******************************' % (epoch))
+        #    trainD(sess, sess2, ops, train_writer)
+        #    trainG(sess, sess2, ops, train_writer)
+        #    trainD(sess, sess2, ops, train_writer)
+        for epoch in range(501):
             log_string('******************************* EPOCH %03d ******************************' % (epoch))
             trainG(sess, sess2, ops, train_writer)
             trainD(sess, sess2, ops, train_writer)
