@@ -165,8 +165,8 @@ def get_model(point_cloud, embedded_label, is_training, bn_decay=None,):
                              padding='VALID', scope='maxpool')
 
     net = tf.reshape(net, [batch_size, -1])
-    with tf.variable_scope('embeding_condition', reuse=tf.AUTO_REUSE):
-        net = tfgan.features.condition_tensor(net, embedded_label)####################
+    #with tf.variable_scope('embeding_condition', reuse=tf.AUTO_REUSE):
+    #    net = tfgan.features.condition_tensor(net, embedded_label)####################
     net = tf_util.fully_connected(net, 512, bn=False, is_training=is_training,
                                   scope='fc1', bn_decay=bn_decay, activation_fn=tf.nn.leaky_relu)
     net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
@@ -301,7 +301,7 @@ def train():
     with tf.variable_scope('Discriminator') as sc:
         embeddingD = variable_scope.get_variable('embedding', [40, FLAGS.embeding_dim])
         embedded_label_D = embedding_ops.embedding_lookup(embeddingD, cloud_labelsD)
-        D_output_trainG = conditional_discriminator(G_output, embedded_label_G)
+        D_output_trainG = conditional_discriminator(G_output, embedded_label_D)
         #D_input1_trainD = tf.concat([point_cloudsD, G_output], axis=0)
         #D_input2_trainD = tf.concat([cloud_labelsD, cloud_labelsG], axis=0)
         sc.reuse_variables()
