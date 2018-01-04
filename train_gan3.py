@@ -26,7 +26,7 @@ parser.add_argument('--log_dir', default='log', help='Log dir [default: log]')
 parser.add_argument('--num_point', type=int, default=1024, help='Point Number [256/512/1024/2048] [default: 1024]')
 parser.add_argument('--max_epoch', type=int, default=250, help='Epoch to run [default: 250]')
 parser.add_argument('--batch_size', type=int, default=32, help='Batch Size during training [default: 32]')
-parser.add_argument('--learning_rate', type=float, default=0.00001, help='Initial learning rate [default: 0.001]')
+parser.add_argument('--learning_rate', type=float, default=0.0001, help='Initial learning rate [default: 0.001]')
 parser.add_argument('--momentum', type=float, default=0.9, help='Initial learning rate [default: 0.9]')
 parser.add_argument('--optimizer', default='adam', help='adam or momentum [default: adam]')
 parser.add_argument('--decay_step', type=int, default=200000, help='Decay step for lr decay [default: 200000]')
@@ -61,22 +61,22 @@ def log_string(out_str):
 
 def get_learning_rateG(batch):
     learning_rate = tf.train.exponential_decay(
-                        0.0001,  # Base learning rate.
+                        BASE_LEARNING_RATE,  # Base learning rate.
                         batch * BATCH_SIZE,  # Current index into the dataset.
                         DECAY_STEP,          # Decay step.
                         DECAY_RATE,          # Decay rate.
                         staircase=True)
-    learning_rate = tf.maximum(learning_rate, 0.00001) # CLIP THE LEARNING RATE!
+    learning_rate = tf.maximum(learning_rate, 0.01*BASE_LEARNING_RATE) # CLIP THE LEARNING RATE!
     return learning_rate
 
 def get_learning_rateD(batch):
     learning_rate = tf.train.exponential_decay(
-                        0.0001,  # Base learning rate.
+                        BASE_LEARNING_RATE,  # Base learning rate.
                         batch * BATCH_SIZE,  # Current index into the dataset.
                         DECAY_STEP,          # Decay step.
                         DECAY_RATE,          # Decay rate.
                         staircase=True)
-    learning_rate = tf.maximum(learning_rate, 0.00001) # CLIP THE LEARNING RATE!
+    learning_rate = tf.maximum(learning_rate, 0.01*BASE_LEARNING_RATE) # CLIP THE LEARNING RATE!
     return learning_rate
 
 def provide_data(sess2):
@@ -173,19 +173,19 @@ def get_model(point_cloud, embedded_label, is_training, bn_decay=None,):
                           scope='dp1')
     net = tf_util.fully_connected(net, 256, bn=False, is_training=is_training,
                                   scope='fc2', bn_decay=bn_decay, activation_fn=tf.nn.leaky_relu)
-    net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
+    net_branch = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
                           scope='dp2')
-    net = tf_util.fully_connected(net, 41, activation_fn=tf.nn.leaky_relu, scope='fc3')
-    net = tf_util.fully_connected(net, 2, activation_fn=None, scope='fc4')
+    net = tf_util.fully_connected(net_branch, 40, activation_fn=None, scope='fc3')
 
-    return net, end_points
+    net2 = tf_util.fully_connected(net_branch, 2, activation_fn=None, scope='fcb3')
+
+    return net2, end_points, net
 
 def conditional_discriminator(point_clouds, embedded_label):
     is_training_pl = tf.constant([True])
     # Get model and loss
     #with tf.variable_scope('Discriminator', reuse=tf.AUTO_REUSE):
-    pred, end_points = get_model(point_clouds, embedded_label, tf.squeeze(is_training_pl))
-    return pred, end_points
+    return get_model(point_clouds, embedded_label, tf.squeeze(is_training_pl))
 
 
 def generate_cloud(feature, noise):
@@ -309,12 +309,14 @@ def train():
 
 
     ## setup loss
-    lossD1 = MODEL.get_loss(D_output_trainD[0], gt_ones, D_output_trainD[1])
-    lossD2 = MODEL.get_loss(D_output_trainG[0], gt_zeros, D_output_trainD[1])
-    lossD = lossD1 + lossD2
+    lossD1 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=D_output_trainD[0], labels=gt_ones)
+    lossD2 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=D_output_trainG[0], labels=gt_zeros)
+    lossD3 = MODEL.get_loss(D_output_trainD[2], cloud_labelsD, D_output_trainD[1])
+    lossD = tf.reduce_mean(lossD1 + lossD2) + lossD3
     lossG1 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=D_output_trainG[0], labels=gt_ones)
-    lossG2 = density_penalty(G_output)
-    lossG = tf.reduce_mean(lossG1) - tf.reduce_mean(tf.reduce_mean((1e-5)*lossG2))
+    lossG2 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=D_output_trainG[2], labels=cloud_labelsG)
+    lossG3 = density_penalty(G_output)
+    lossG = tf.reduce_mean(lossG1 + lossG2) - tf.reduce_mean(tf.reduce_mean((1e-5)*lossG3))
     tf.summary.scalar('lossD', lossD)
     tf.summary.scalar('lossG', lossG)
 
