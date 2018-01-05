@@ -64,9 +64,9 @@ def get_learning_rateG(batch):
                         BASE_LEARNING_RATE,  # Base learning rate.
                         batch * BATCH_SIZE,  # Current index into the dataset.
                         DECAY_STEP,          # Decay step.
-                        DECAY_RATE,          # Decay rate.
+                        0.9,          # Decay rate.
                         staircase=True)
-    learning_rate = tf.maximum(learning_rate, 0.01*BASE_LEARNING_RATE) # CLIP THE LEARNING RATE!
+    learning_rate = tf.maximum(learning_rate, 0.05*BASE_LEARNING_RATE) # CLIP THE LEARNING RATE!
     return learning_rate
 
 def get_learning_rateD(batch):
@@ -389,7 +389,7 @@ def train():
             while (True):
                 repeat += 1
                 acc = trainG(sess, sess2, ops, train_writer)
-                if (acc > 0.5) or (repeat == 3):
+                if (acc > 0.5) or (repeat == 6):
                     break
             if epoch % 100 == 0:
                 builder = tf.saved_model.builder.SavedModelBuilder(LOG_DIR + '/model_in_epoch_' + str(epoch))
