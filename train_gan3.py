@@ -316,7 +316,7 @@ def train():
     lossG1 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=D_output_trainG[0], labels=gt_ones)
     lossG2 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=D_output_trainG[2], labels=cloud_labelsG)
     lossG3 = density_penalty(G_output)
-    lossG = tf.reduce_mean(lossG1 + lossG2) - tf.reduce_mean(tf.reduce_mean((1e-5)*lossG3))
+    lossG = tf.reduce_mean(lossG1 + lossG2)# - tf.reduce_mean(tf.reduce_mean((1e-5)*lossG3))
     tf.summary.scalar('lossD', lossD)
     tf.summary.scalar('lossG', lossG)
 
