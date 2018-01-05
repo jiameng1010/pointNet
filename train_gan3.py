@@ -51,8 +51,8 @@ DECAY_RATE = FLAGS.decay_rate
 
 MODEL = importlib.import_module(FLAGS.model)
 
-LOG_DIR = './log/gan_log_6'
-LOG_FOUT = open(os.path.join('./log/gan_log_6', 'log_train.txt'), 'w')
+LOG_DIR = './log/gan_log_7'
+LOG_FOUT = open(os.path.join('./log/gan_log_7', 'log_train.txt'), 'w')
 LOG_FOUT.write(str(FLAGS)+'\n')
 def log_string(out_str):
     LOG_FOUT.write(out_str+'\n')
@@ -231,17 +231,17 @@ def conditional_generator(inputs):
             activation_fn=tf.nn.relu, normalizer_fn=layers.batch_norm,
             weights_regularizer=layers.l2_regularizer(2.5e-5)):
 
-        net = layers.fully_connected(noise, 64, activation_fn=tf.nn.leaky_relu)
         with tf.variable_scope('conditioning1'):
-            net = tfgan.features.condition_tensor(net, cloud_labels)
+            net = tfgan.features.condition_tensor(noise, cloud_labels)
+        net = layers.fully_connected(noise, 64, activation_fn=tf.nn.leaky_relu)
         net = layers.fully_connected(net, 128, activation_fn=tf.nn.leaky_relu)
-        with tf.variable_scope('conditioning2'):
-            net = tfgan.features.condition_tensor(net, cloud_labels)
+        #with tf.variable_scope('conditioning2'):
+        #    net = tfgan.features.condition_tensor(net, cloud_labels)
         net = layers.fully_connected(net, 256, activation_fn=tf.nn.leaky_relu)
-        with tf.variable_scope('conditioning3'):
-            net = tfgan.features.condition_tensor(net, cloud_labels)
+        #with tf.variable_scope('conditioning3'):
+        #    net = tfgan.features.condition_tensor(net, cloud_labels)
         net = layers.fully_connected(net, 512, activation_fn=tf.nn.leaky_relu)
-        net = tf.concat([net, partial_feature], axis=1)
+        net = tfgan.features.condition_tensor(net, partial_feature)
         feature = layers.fully_connected(net, 1024)
 
     noise2 = tf.random_normal([32, 1024, 16])
@@ -561,7 +561,7 @@ def tester(sess, sess2, ops, train_writer):
         break
 
 
-
+os.system('cp train.py %s' % (LOG_DIR))
 if __name__ == "__main__":
     train()
     #LOG_FOUT.close()
