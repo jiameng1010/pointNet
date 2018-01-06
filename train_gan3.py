@@ -51,8 +51,8 @@ DECAY_RATE = FLAGS.decay_rate
 
 MODEL = importlib.import_module(FLAGS.model)
 
-LOG_DIR = './log/gan_log_8'
-LOG_FOUT = open(os.path.join('./log/gan_log_8', 'log_train.txt'), 'w')
+LOG_DIR = './log/gan_log_9'
+LOG_FOUT = open(os.path.join('./log/gan_log_9', 'log_train.txt'), 'w')
 LOG_FOUT.write(str(FLAGS)+'\n')
 def log_string(out_str):
     LOG_FOUT.write(out_str+'\n')
@@ -71,12 +71,12 @@ def get_learning_rateG(batch):
 
 def get_learning_rateD(batch):
     learning_rate = tf.train.exponential_decay(
-                        BASE_LEARNING_RATE,  # Base learning rate.
+                        1e-2 * BASE_LEARNING_RATE,  # Base learning rate.
                         batch * BATCH_SIZE,  # Current index into the dataset.
                         DECAY_STEP,          # Decay step.
                         DECAY_RATE,          # Decay rate.
                         staircase=True)
-    learning_rate = tf.maximum(learning_rate, 0.01*BASE_LEARNING_RATE) # CLIP THE LEARNING RATE!
+    learning_rate = tf.maximum(learning_rate, 1e-4*BASE_LEARNING_RATE) # CLIP THE LEARNING RATE!
     return learning_rate
 
 def provide_data(sess2):
