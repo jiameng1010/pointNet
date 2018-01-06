@@ -386,6 +386,7 @@ def train():
         for epoch in range(501):
             log_string('******************************* EPOCH %03d ******************************' % (epoch))
             trainD(sess, sess2, ops, train_writer)
+            trainG(sess, sess2, ops, train_writer)
             repeat = 0
             while (True):
                 repeat += 1
