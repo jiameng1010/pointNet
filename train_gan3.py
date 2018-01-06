@@ -72,12 +72,12 @@ def get_learning_rateG(batch):
 
 def get_learning_rateD(batch):
     learning_rate = tf.train.exponential_decay(
-                        1e-2 * BASE_LEARNING_RATE,  # Base learning rate.
+                        1e-1 * BASE_LEARNING_RATE,  # Base learning rate.
                         batch * BATCH_SIZE,  # Current index into the dataset.
                         DECAY_STEP,          # Decay step.
                         DECAY_RATE,          # Decay rate.
                         staircase=True)
-    learning_rate = tf.maximum(learning_rate, 1e-4*BASE_LEARNING_RATE) # CLIP THE LEARNING RATE!
+    learning_rate = tf.maximum(learning_rate, 1e-3*BASE_LEARNING_RATE) # CLIP THE LEARNING RATE!
     return learning_rate
 
 def provide_data(sess2):
