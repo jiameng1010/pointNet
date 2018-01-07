@@ -563,7 +563,7 @@ def tester(sess, sess2, ops, train_writer):
         break
 
 
-os.system('cp train.py %s' % (LOG_DIR))
+os.system('cp train_gan3.py %s' % (LOG_DIR))
 if __name__ == "__main__":
     train()
     #LOG_FOUT.close()
