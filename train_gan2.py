@@ -349,13 +349,14 @@ def train():
         G_input = noise, cloud_labelsG, partial_featureG
         G_output = conditional_generator(G_input)
     with tf.variable_scope('Discriminator') as sc:
-        D_output_trainG = conditional_discriminator(G_output)
+
         #D_output_trainG = conditional_discriminator(G_output, cloud_labelsG)
         D_input1_trainD = tf.concat([point_cloudsD, G_output], axis=0)
         D_input2_trainD = tf.concat([cloud_labelsD, cloud_labelsG], axis=0)
-        sc.reuse_variables()
-        D_output_trainD = conditional_discriminator(D_input1_trainD)
 
+        D_output_trainD = conditional_discriminator(D_input1_trainD)
+        sc.reuse_variables()
+        D_output_trainG = conditional_discriminator(G_output)
 
     ## setup loss
     lossD = MODEL.get_loss(D_output_trainD[0], gt_trainD, D_output_trainD[1])
@@ -433,9 +434,12 @@ def train():
             log_string('******************************* EPOCH %03d ******************************' % (epoch))
             if not epoch == 0:
                 acc = trainG(sess, sess2, ops, train_writer)
+
             if epoch >= 1:
                 trainD(sess, sess2, ops, train_writer)
             else:
+                trainD(sess, sess2, ops, train_writer)
+                trainD(sess, sess2, ops, train_writer)
                 trainD(sess, sess2, ops, train_writer)
                 trainD(sess, sess2, ops, train_writer)
             acc = trainG(sess, sess2, ops, train_writer)
