@@ -391,8 +391,8 @@ def train():
             if epoch == 0:
                 for i in range(10):
                     trainD(sess, sess2, ops, train_writer)
-                else:
-                    train_joint(sess, sess2, ops, train_writer)
+            else:
+                train_joint(sess, sess2, ops, train_writer)
 
             if epoch % 100 == 0:
                 builder = tf.saved_model.builder.SavedModelBuilder(LOG_DIR + '/model_in_epoch_' + str(epoch))
