@@ -26,7 +26,7 @@ parser.add_argument('--log_dir', default='log', help='Log dir [default: log]')
 parser.add_argument('--num_point', type=int, default=1024, help='Point Number [256/512/1024/2048] [default: 1024]')
 parser.add_argument('--max_epoch', type=int, default=250, help='Epoch to run [default: 250]')
 parser.add_argument('--batch_size', type=int, default=32, help='Batch Size during training [default: 32]')
-parser.add_argument('--learning_rate', type=float, default=0.0001, help='Initial learning rate [default: 0.001]')
+parser.add_argument('--learning_rate', type=float, default=0.00001, help='Initial learning rate [default: 0.001]')
 parser.add_argument('--momentum', type=float, default=0.9, help='Initial learning rate [default: 0.9]')
 parser.add_argument('--optimizer', default='adam', help='adam or momentum [default: adam]')
 parser.add_argument('--decay_step', type=int, default=200000, help='Decay step for lr decay [default: 200000]')
@@ -51,8 +51,8 @@ DECAY_RATE = FLAGS.decay_rate
 
 MODEL = importlib.import_module(FLAGS.model)
 
-LOG_DIR = './log/gan_log_9'
-LOG_FOUT = open(os.path.join('./log/gan_log_9', 'log_train.txt'), 'w')
+LOG_DIR = './log/gan_log_12'
+LOG_FOUT = open(os.path.join('./log/gan_log_12', 'log_train.txt'), 'w')
 LOG_FOUT.write(str(FLAGS)+'\n')
 
 def log_string(out_str):
@@ -65,19 +65,19 @@ def get_learning_rateG(batch):
                         BASE_LEARNING_RATE,  # Base learning rate.
                         batch * BATCH_SIZE,  # Current index into the dataset.
                         DECAY_STEP,          # Decay step.
-                        0.9,          # Decay rate.
+                        DECAY_RATE,          # Decay rate.
                         staircase=True)
-    learning_rate = tf.maximum(learning_rate, 0.05*BASE_LEARNING_RATE) # CLIP THE LEARNING RATE!
+    learning_rate = tf.maximum(learning_rate, 0.0005) # CLIP THE LEARNING RATE!
     return learning_rate
 
 def get_learning_rateD(batch):
     learning_rate = tf.train.exponential_decay(
-                        1e-1 * BASE_LEARNING_RATE,  # Base learning rate.
+                        BASE_LEARNING_RATE,  # Base learning rate.
                         batch * BATCH_SIZE,  # Current index into the dataset.
                         DECAY_STEP,          # Decay step.
                         DECAY_RATE,          # Decay rate.
                         staircase=True)
-    learning_rate = tf.maximum(learning_rate, 1e-3*BASE_LEARNING_RATE) # CLIP THE LEARNING RATE!
+    learning_rate = tf.maximum(learning_rate, 0.00001) # CLIP THE LEARNING RATE!
     return learning_rate
 
 def provide_data(sess2):
@@ -176,11 +176,9 @@ def get_model(point_cloud, embedded_label, is_training, bn_decay=None,):
                                   scope='fc2', bn_decay=bn_decay, activation_fn=tf.nn.leaky_relu)
     net_branch = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
                           scope='dp2')
-    net = tf_util.fully_connected(net_branch, 40, activation_fn=None, scope='fc3')
+    net = tf_util.fully_connected(net_branch, 41, activation_fn=None, scope='fc3')
 
-    net2 = tf_util.fully_connected(net_branch, 2, activation_fn=None, scope='fcb3')
-
-    return net2, end_points, net
+    return net, end_points
 
 def conditional_discriminator(point_clouds, embedded_label):
     is_training_pl = tf.constant([True])
@@ -286,7 +284,7 @@ def train():
     #
     noise = tf.random_normal((FLAGS.batch_size, FLAGS.noise_dims))
     gt_zeros = tf.constant(np.zeros((32)), dtype=tf.int32)
-    gt_ones = tf.constant(np.ones((32)), dtype=tf.int32)
+    gt_forty = tf.constant(40*np.ones((32)), dtype=tf.int32)
 
     ## setup models
     incomplete_features = tf.Graph()
@@ -310,28 +308,25 @@ def train():
 
 
     ## setup loss
-    lossD1 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=D_output_trainD[0], labels=gt_ones)
-    lossD2 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=D_output_trainG[0], labels=gt_zeros)
-    lossD3 = MODEL.get_loss(D_output_trainD[2], cloud_labelsD, D_output_trainD[1])
-    lossD = tf.reduce_mean(lossD1 + lossD2) + lossD3
-    lossG1 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=D_output_trainG[0], labels=gt_ones)
-    lossG2 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=D_output_trainG[2], labels=cloud_labelsG)
-    lossG3 = density_penalty(G_output)
-    lossG = tf.reduce_mean(lossG1 + lossG2)# - tf.reduce_mean(tf.reduce_mean((1e-5)*lossG3))
+    lossD1 = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=D_output_trainG[0], labels=gt_forty))
+    lossD2 = MODEL.get_loss(D_output_trainD[0], cloud_labelsD, D_output_trainD[1])
+    lossD = lossD1 + lossD2
+    lossG1 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=D_output_trainG[0], labels=cloud_labelsG)
+    lossG2 = density_penalty(G_output)
+    lossG = tf.reduce_mean(lossG1) # - tf.reduce_mean(tf.reduce_mean((1e-5)*lossG3))
     tf.summary.scalar('lossD', lossD)
     tf.summary.scalar('lossG', lossG)
 
-    correct_trainD1 = tf.equal(tf.argmax(D_output_trainD[0], 1), tf.to_int64(gt_ones))
-    correct_trainD2 = tf.equal(tf.argmax(D_output_trainG[0], 1), tf.to_int64(gt_zeros))
-    accuracy_classification_trainD = (tf.reduce_sum(tf.cast((correct_trainD1), tf.float32)) + tf.reduce_sum(tf.cast((correct_trainD2), tf.float32))) / float(2*BATCH_SIZE)
-    correct_trainG = tf.equal(tf.argmax(D_output_trainG[0], 1), tf.to_int64(gt_ones))
+    correct_trainD = tf.less(tf.argmax(D_output_trainD[0], 1), tf.to_int64(gt_forty))
+    correct_trainG = tf.equal(tf.argmax(D_output_trainG[0], 1), tf.to_int64(gt_forty))
+    accuracy_classification_trainD = (tf.reduce_sum(tf.cast((correct_trainD), tf.float32))) / float(BATCH_SIZE)
     accuracy_classification_trainG = tf.reduce_sum(tf.cast(correct_trainG, tf.float32)) / float(BATCH_SIZE)
     forty = tf.constant(40 * np.ones(shape=(BATCH_SIZE), dtype=int))
     tf.summary.scalar('accuracy_classification_trainD', accuracy_classification_trainD)
     tf.summary.scalar('accuracy_classification_trainG', accuracy_classification_trainG)
-    correct_label_trainD = tf.equal(tf.argmax(D_output_trainD[2], 1), tf.to_int64(cloud_labelsD))
+    correct_label_trainD = tf.equal(tf.argmax(D_output_trainD[0], 1), tf.to_int64(cloud_labelsD))
     accuracy_label_trainD = tf.reduce_sum(tf.cast((correct_label_trainD), tf.float32)) / float(BATCH_SIZE)
-    correct_label_trainG = tf.equal(tf.argmax(D_output_trainG[2], 1), tf.to_int64(cloud_labelsG))
+    correct_label_trainG = tf.equal(tf.argmax(D_output_trainG[0], 1), tf.to_int64(cloud_labelsG))
     accuracy_label_trainG = tf.reduce_sum(tf.cast((correct_label_trainG), tf.float32)) / float(BATCH_SIZE)
     tf.summary.scalar('accuracy_label_trainD', accuracy_label_trainD)
     tf.summary.scalar('accuracy_label_trainG', accuracy_label_trainG)
@@ -385,20 +380,80 @@ def train():
 
         for epoch in range(501):
             log_string('******************************* EPOCH %03d ******************************' % (epoch))
-            trainD(sess, sess2, ops, train_writer)
-            trainG(sess, sess2, ops, train_writer)
-            repeat = 0
-            while (True):
-                repeat += 1
-                acc = trainG(sess, sess2, ops, train_writer)
-                if (acc > 0.5) or (repeat == 6):
-                    break
+            #trainD(sess, sess2, ops, train_writer)
+            #trainG(sess, sess2, ops, train_writer)
+            #repeat = 0
+            #while (True):
+            #    repeat += 1
+            #    acc = trainG(sess, sess2, ops, train_writer)
+            #    if (acc > 0.5) or (repeat == 6):
+            #        break
+            if epoch == 0:
+                for i in range(10):
+                    trainD(sess, sess2, ops, train_writer)
+                else:
+                    train_joint(sess, sess2, ops, train_writer)
+
             if epoch % 100 == 0:
                 builder = tf.saved_model.builder.SavedModelBuilder(LOG_DIR + '/model_in_epoch_' + str(epoch))
                 builder.add_meta_graph_and_variables(sess, 'GAN')
                 builder.save()
                 del builder
         print('Done!')
+
+def train_joint(sess, sess2, ops, train_writer):
+    log_string('train JJJJJJJJJJJJJJJJJJJJJJJJJJJJJ')
+    generator = provide_data(sess2)
+    loss_sumG = 0
+    loss_sumD = 0
+    AcDsum = 0
+    AcGsum = 0
+    AlDsum = 0
+    AlGsum = 0
+    num = 0
+    for data in generator:
+        num += 1
+        feed_dict = {ops['cloud_labelsG']: data[5],
+                     ops['cloud_labelsD']: data[2],
+                     ops['point_cloudsD']: data[0],
+                     ops['partial_featureG']: data[3]}
+        if num%2 == 0:
+            summary, step, _, lossG, lossD, pred_val, AcD, AcG, AlD, AlG = sess.run([ops['merged'], ops['global_step'],
+                                                                                    ops['train_opG'], ops['lossG'],
+                                                                                    ops['lossD'], ops['predG'],
+                                                                                    ops['accuracy_classification_trainD'],
+                                                                                    ops['accuracy_classification_trainG'],
+                                                                                    ops['accuracy_label_trainD'],
+                                                                                    ops['accuracy_label_trainG']],
+                                                                                    feed_dict=feed_dict)
+        else:
+            summary, step, _, lossG, lossD, pred_val, AcD, AcG, AlD, AlG = sess.run([ops['merged'], ops['global_step'],
+                                                                                    ops['train_opD'], ops['lossG'],
+                                                                                    ops['lossD'], ops['predG'],
+                                                                                    ops['accuracy_classification_trainD'],
+                                                                                    ops['accuracy_classification_trainG'],
+                                                                                    ops['accuracy_label_trainD'],
+                                                                                    ops['accuracy_label_trainG']],
+                                                                                    feed_dict=feed_dict)
+        AcDsum += AcD
+        AcGsum += AcG
+        AlDsum += AlD
+        AlGsum += AlG
+        train_writer.add_summary(summary, step)
+        loss_sumG += lossG
+        loss_sumD += lossD
+        if np.random.rand() <= 0.001:
+            h5r = h5py.File((LOG_DIR + '/demo/demo' + str(step).zfill(8) + '.h5'), 'w')
+            h5r.create_dataset('data', data=pred_val)
+            h5r.create_dataset('label', data=data[5])
+            h5r.close()
+    log_string('total lossG: %f' % loss_sumG)
+    log_string('total lossD: %f' % loss_sumD)
+    log_string('accuracy_label_trainD: %f' % (AlDsum/num))
+    log_string('accuracy_label_trainG: %f' % (AlGsum/num))
+    log_string('accuracy_classification_trainD: %f' % (AcDsum/num))
+    log_string('accuracy_classification_trainG: %f' % (AcGsum/num))
+    return (AcGsum/num)
 
 def trainG(sess, sess2, ops, train_writer):
     log_string('train GGGGGGGGGGGGGGGGGGGGG')
