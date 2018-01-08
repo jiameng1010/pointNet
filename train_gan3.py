@@ -310,7 +310,7 @@ def train():
     ## setup loss
     lossD1 = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=D_output_trainG[0], labels=gt_forty))
     lossD2 = MODEL.get_loss(D_output_trainD[0], cloud_labelsD, D_output_trainD[1])
-    lossD = lossD1 + lossD2
+    lossD = lossD1/32 + lossD2
     lossG1 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=D_output_trainG[0], labels=cloud_labelsG)
     lossG2 = density_penalty(G_output)
     lossG = tf.reduce_mean(lossG1) # - tf.reduce_mean(tf.reduce_mean((1e-5)*lossG3))
