@@ -12,6 +12,7 @@ from tensorflow.python.ops import variable_scope, embedding_ops
 from tensorflow.contrib.gan.python.losses.python import tuple_losses_impl as tfgan_losses
 from tensorflow.contrib.data import Dataset, Iterator
 
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(BASE_DIR)
 sys.path.append(os.path.join(BASE_DIR, 'models'))
