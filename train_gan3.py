@@ -51,8 +51,8 @@ DECAY_RATE = FLAGS.decay_rate
 
 MODEL = importlib.import_module(FLAGS.model)
 
-LOG_DIR = './log/gan_log_12'
-LOG_FOUT = open(os.path.join('./log/gan_log_12', 'log_train.txt'), 'w')
+LOG_DIR = './log/gan_log_13'
+LOG_FOUT = open(os.path.join('./log/gan_log_13', 'log_train.txt'), 'w')
 LOG_FOUT.write(str(FLAGS)+'\n')
 
 def log_string(out_str):
@@ -392,7 +392,11 @@ def train():
                 for i in range(10):
                     trainD(sess, sess2, ops, train_writer)
             else:
-                train_joint(sess, sess2, ops, train_writer)
+                if epoch%2 == 0:
+                    train_joint(sess, sess2, ops, train_writer, save_for_val=True)
+                    validate(sess2, test_writer)
+                else:
+                    train_joint(sess, sess2, ops, train_writer)
 
             if epoch % 100 == 0:
                 builder = tf.saved_model.builder.SavedModelBuilder(LOG_DIR + '/model_in_epoch_' + str(epoch))
@@ -401,7 +405,27 @@ def train():
                 del builder
         print('Done!')
 
-def train_joint(sess, sess2, ops, train_writer):
+def validate(sess2, test_writer):
+    log_string('validate VVVVVVVVVVVVVVVVVVVVVVVVVV')
+    val_data, val_label = provider.loadDataFile(LOG_DIR + '/for_validate.h5')
+    pointclouds_pl = sess2.graph.get_tensor_by_name('Placeholder:0')
+    labels_pl = sess2.graph.get_tensor_by_name('Placeholder_1:0')
+    is_train_pl = sess2.graph.get_tensor_by_name('Placeholder_2:0')
+
+    num_batches = val_data.shape[0] // BATCH_SIZE
+    for batch_idx in range(num_batches):
+        start_idx = batch_idx * BATCH_SIZE
+        end_idx = (batch_idx + 1) * BATCH_SIZE
+        feed_dict = {pointclouds_pl: val_data[start_idx:end_idx, :, :],
+                     labels_pl: val_label[start_idx:end_idx],
+                     is_train_pl: False, }
+        summary, step = sess2.run(sess2.graph.get_tensor_by_name('Merge/MergeSummary:0'),
+                                  sess2.graph.get_tensor_by_name('Variable:0'),
+                                  feed_dict=feed_dict)
+        test_writer.add_summary(summary, step)
+
+
+def train_joint(sess, sess2, ops, train_writer, save_for_val=False):
     log_string('train JJJJJJJJJJJJJJJJJJJJJJJJJJJJJ')
     generator = provide_data(sess2)
     loss_sumG = 0
@@ -447,6 +471,20 @@ def train_joint(sess, sess2, ops, train_writer):
             h5r.create_dataset('data', data=pred_val)
             h5r.create_dataset('label', data=data[5])
             h5r.close()
+        if save_for_val:
+            if num == 1:
+                #cloud_for_save = []
+                cloud_for_save = pred_val
+                label_for_save = data[5]
+            else:
+                np.append(cloud_for_save, pred_val, axis=0)
+                np.append(label_for_save, data[5], axis=0)
+
+    if save_for_val:
+        h5val = h5py.File(LOG_DIR + '/for_validate.h5', 'w')
+        h5val.create_dataset('cloud', cloud_for_save)
+        h5val.create_dataset('label', label_for_save)
+        h5val.close()
     log_string('total lossG: %f' % loss_sumG)
     log_string('total lossD: %f' % loss_sumD)
     log_string('accuracy_label_trainD: %f' % (AlDsum/num))
