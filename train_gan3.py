@@ -389,6 +389,7 @@ def train():
             #    if (acc > 0.5) or (repeat == 6):
             #        break
             if epoch == 0:
+                continue
                 #for i in range(10):
                 #    trainD(sess, sess2, ops, train_writer)
             else:
