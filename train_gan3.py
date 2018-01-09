@@ -423,8 +423,8 @@ def validate(sess2, test_writer):
         feed_dict = {pointclouds_pl: val_data[start_idx:end_idx, :, :],
                      labels_pl: val_label[start_idx:end_idx],
                      is_train_pl: False, }
-        summary, step = sess2.run(sess2.graph.get_tensor_by_name('Merge/MergeSummary:0'),
-                                  sess2.graph.get_tensor_by_name('Variable:0'),
+        summary, step = sess2.run([sess2.graph.get_tensor_by_name('Merge/MergeSummary:0'),
+                                  sess2.graph.get_tensor_by_name('Variable:0')],
                                   feed_dict=feed_dict)
         test_writer.add_summary(summary, step)
 
