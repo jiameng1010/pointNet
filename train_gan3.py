@@ -486,7 +486,7 @@ def train_joint(sess, sess2, ops, train_writer, save_for_val=False):
 
     if save_for_val:
         h5val = h5py.File(LOG_DIR + '/for_validate.h5', 'w')
-        h5val.create_dataset('cloud', data=cloud_for_save)
+        h5val.create_dataset('data', data=cloud_for_save)
         h5val.create_dataset('label', data=label_for_save)
         h5val.close()
     log_string('total lossG: %f' % loss_sumG)
