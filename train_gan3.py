@@ -416,16 +416,24 @@ def validate(sess2, test_writer, epoch):
     is_train_pl = sess2.graph.get_tensor_by_name('Placeholder_2:0')
 
     num_batches = val_data.shape[0] // BATCH_SIZE
+    acc = 0
+    los = 0
     for batch_idx in range(num_batches):
         start_idx = batch_idx * BATCH_SIZE
         end_idx = (batch_idx + 1) * BATCH_SIZE
         feed_dict = {pointclouds_pl: val_data[start_idx:end_idx, :, :],
                      labels_pl: val_label[start_idx:end_idx],
                      is_train_pl: False, }
-        summary, step = sess2.run([sess2.graph.get_tensor_by_name('Merge/MergeSummary:0'),
-                                  sess2.graph.get_tensor_by_name('Variable:0')],
+        accuracy, loss = sess2.run([sess2.graph.get_tensor_by_name('div:0'),
+                                  sess2.graph.get_tensor_by_name('add:0')],
                                   feed_dict=feed_dict)
-        test_writer.add_summary(summary, epoch)
+        acc += accuracy
+        los += loss
+
+    summary = tf.Summary(value=[tf.Summary.Value(tag='accuracy', simple_value=acc)])
+    test_writer.add_summary(summary, epoch)
+    summary = tf.Summary(value=[tf.Summary.Value(tag='loss', simple_value=los)])
+    test_writer.add_summary(summary, epoch)
 
 
 def train_joint(sess, sess2, ops, train_writer, save_for_val=False):
