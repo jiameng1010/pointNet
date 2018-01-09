@@ -397,7 +397,7 @@ def train():
             else:
                 if epoch%10 == 0:
                     train_joint(sess, sess2, ops, train_writer, save_for_val=True)
-                    validate(sess2, test_writer)
+                    validate(sess2, test_writer, epoch)
                 else:
                     train_joint(sess, sess2, ops, train_writer)
 
@@ -408,7 +408,7 @@ def train():
                 del builder
         print('Done!')
 
-def validate(sess2, test_writer):
+def validate(sess2, test_writer, epoch):
     log_string('validate VVVVVVVVVVVVVVVVVVVVVVVVVV')
     val_data, val_label = provider.loadDataFile(LOG_DIR + '/for_validate.h5')
     pointclouds_pl = sess2.graph.get_tensor_by_name('Placeholder:0')
@@ -425,7 +425,7 @@ def validate(sess2, test_writer):
         summary, step = sess2.run([sess2.graph.get_tensor_by_name('Merge/MergeSummary:0'),
                                   sess2.graph.get_tensor_by_name('Variable:0')],
                                   feed_dict=feed_dict)
-        test_writer.add_summary(summary, step)
+        test_writer.add_summary(summary, epoch)
 
 
 def train_joint(sess, sess2, ops, train_writer, save_for_val=False):
