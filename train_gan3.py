@@ -392,11 +392,10 @@ def train():
             #    if (acc > 0.5) or (repeat == 6):
             #        break
             if epoch == 0:
-                continue
                 for i in range(10):
                     trainD(sess, sess2, ops, train_writer)
             else:
-                if epoch%1 == 0:
+                if epoch%10 == 0:
                     train_joint(sess, sess2, ops, train_writer, save_for_val=True)
                     validate(sess2, test_writer, epoch)
                 else:
