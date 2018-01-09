@@ -53,6 +53,8 @@ MODEL = importlib.import_module(FLAGS.model)
 
 LOG_DIR = './log/gan_log_13'
 LOG_FOUT = open(os.path.join('./log/gan_log_13', 'log_train.txt'), 'w')
+os.system('mkdir %s' % (LOG_DIR))
+os.system('mkdir %s' % (LOG_DIR + '/demo'))
 LOG_FOUT.write(str(FLAGS)+'\n')
 
 def log_string(out_str):
@@ -393,7 +395,7 @@ def train():
                 #for i in range(10):
                 #    trainD(sess, sess2, ops, train_writer)
             else:
-                if epoch%2 == 0:
+                if epoch%1 == 0:
                     train_joint(sess, sess2, ops, train_writer, save_for_val=True)
                     validate(sess2, test_writer)
                 else:
@@ -478,13 +480,13 @@ def train_joint(sess, sess2, ops, train_writer, save_for_val=False):
                 cloud_for_save = pred_val
                 label_for_save = data[5]
             else:
-                np.append(cloud_for_save, pred_val, axis=0)
-                np.append(label_for_save, data[5], axis=0)
+                cloud_for_save = np.append(cloud_for_save, pred_val, axis=0)
+                label_for_save = np.append(label_for_save, data[5], axis=0)
 
     if save_for_val:
         h5val = h5py.File(LOG_DIR + '/for_validate.h5', 'w')
-        h5val.create_dataset('cloud', cloud_for_save)
-        h5val.create_dataset('label', label_for_save)
+        h5val.create_dataset('cloud', data=cloud_for_save)
+        h5val.create_dataset('label', data=label_for_save)
         h5val.close()
     log_string('total lossG: %f' % loss_sumG)
     log_string('total lossD: %f' % loss_sumD)
