@@ -496,6 +496,7 @@ def train_joint(sess, sess2, ops, train_writer, save_for_val=False):
     log_string('accuracy_classification_trainG: %f' % (AcGsum/num))
     return (AcGsum/num)
 
+
 def trainG(sess, sess2, ops, train_writer):
     log_string('train GGGGGGGGGGGGGGGGGGGGG')
     generator = provide_data(sess2)
