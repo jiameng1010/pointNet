@@ -354,7 +354,7 @@ def train():
         config.allow_soft_placement = True
         config.log_device_placement = False
         sess2 = tf.Session(graph=incomplete_features, config=config)
-        tf.saved_model.loader.load(sess2, 'feature_net', './log/model')
+        tf.saved_model.loader.load(sess2, 'feature_net', './log/model1')
     with tf.Session() as sess:
         ## summary writer
         merged = tf.summary.merge_all()

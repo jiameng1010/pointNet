@@ -168,7 +168,7 @@ def train():
             if epoch % 10 == 0:
                 save_path = saver.save(sess, os.path.join(LOG_DIR, "model.ckpt"))
                 log_string("Model saved in file: %s" % save_path)
-            if epoch%50 == 0:
+            if epoch == 50:
                 builder.save()
 
 
