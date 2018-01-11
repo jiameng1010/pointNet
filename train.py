@@ -154,7 +154,7 @@ def train():
                'merged': merged,
                'step': batch}
 
-        builder = tf.saved_model.builder.SavedModelBuilder('./log/model')
+        builder = tf.saved_model.builder.SavedModelBuilder('./log/model1')
         builder.add_meta_graph_and_variables(sess, 'feature_net')
 
         for epoch in range(MAX_EPOCH):
@@ -168,7 +168,7 @@ def train():
             if epoch % 10 == 0:
                 save_path = saver.save(sess, os.path.join(LOG_DIR, "model.ckpt"))
                 log_string("Model saved in file: %s" % save_path)
-            if epoch == 100:
+            if epoch%50 == 0:
                 builder.save()
 
 
