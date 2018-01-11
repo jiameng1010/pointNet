@@ -52,7 +52,7 @@ DECAY_RATE = FLAGS.decay_rate
 
 MODEL = importlib.import_module(FLAGS.model)
 
-LOG_DIR = './log/gan_log_14'
+LOG_DIR = './log/gan_log_15'
 os.system('mkdir %s' % (LOG_DIR))
 os.system('mkdir %s' % (LOG_DIR + '/demo'))
 LOG_FOUT = open(os.path.join(LOG_DIR, 'log_train.txt'), 'w')
@@ -183,7 +183,69 @@ def get_model(point_cloud, embedded_label, is_training, bn_decay=None,):
 
     return net, end_points
 
+def get_model2(point_cloud, embedded_label, is_training, bn_decay=None,):
+    """ Classification PointNet, input is BxNx3, output Bx40 """
+    batch_size = point_cloud.get_shape()[0].value
+    num_point = point_cloud.get_shape()[1].value
+    end_points = {}
+
+    input_image = tf.expand_dims(point_cloud, -1)
+
+    net = tf_util.conv2d(input_image, 64, [1,3],
+                         padding='VALID', stride=[1,1],
+                         bn=False, is_training=is_training,
+                         scope='conv1', bn_decay=bn_decay, activation_fn=tf.nn.leaky_relu)
+    net = tf_util.conv2d(net, 64, [1,1],
+                         padding='VALID', stride=[1,1],
+                         bn=False, is_training=is_training,
+                         scope='conv2', bn_decay=bn_decay, activation_fn=tf.nn.leaky_relu)
+
+    with tf.variable_scope('transform_net2', reuse=tf.AUTO_REUSE) as sc:
+        transform = feature_transform_net_no_bn(net, is_training, bn_decay, K=64)
+
+    end_points['transform'] = transform
+    net_transformed = tf.matmul(tf.squeeze(net, axis=[2]), transform)
+    net_transformed = tf.expand_dims(net_transformed, [2])
+
+    net = tf_util.conv2d(net_transformed, 64, [1,1],
+                         padding='VALID', stride=[1,1],
+                         bn=False, is_training=is_training,
+                         scope='conv3', bn_decay=bn_decay, activation_fn=tf.nn.leaky_relu)
+    net = tf_util.conv2d(net, 128, [1,1],
+                         padding='VALID', stride=[1,1],
+                         bn=False, is_training=is_training,
+                         scope='conv4', bn_decay=bn_decay, activation_fn=tf.nn.leaky_relu)
+    net = tf_util.conv2d(net, 1024, [1,1],
+                         padding='VALID', stride=[1,1],
+                         bn=False, is_training=is_training,
+                         scope='conv5', bn_decay=bn_decay, activation_fn=tf.nn.leaky_relu)
+
+    # Symmetric function: max pooling
+    net = tf_util.max_pool2d(net, [num_point,1],
+                             padding='VALID', scope='maxpool')
+
+    net = tf.reshape(net, [batch_size, -1])
+    #with tf.variable_scope('embeding_condition', reuse=tf.AUTO_REUSE):
+    #    net = tfgan.features.condition_tensor(net, embedded_label)####################
+    net = tf_util.fully_connected(net, 512, bn=False, is_training=is_training,
+                                  scope='fc1', bn_decay=bn_decay, activation_fn=tf.nn.leaky_relu)
+    net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
+                          scope='dp1')
+    net = tf_util.fully_connected(net, 256, bn=False, is_training=is_training,
+                                  scope='fc2', bn_decay=bn_decay, activation_fn=tf.nn.leaky_relu)
+    net_branch = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
+                          scope='dp2')
+    net = tf_util.fully_connected(net_branch, 41, activation_fn=None, scope='fc3')
+
+    return net, end_points
+
 def conditional_discriminator(point_clouds, embedded_label):
+    is_training_pl = tf.constant([True])
+    # Get model and loss
+    #with tf.variable_scope('Discriminator', reuse=tf.AUTO_REUSE):
+    return get_model(point_clouds, embedded_label, tf.squeeze(is_training_pl))
+
+def conditional_discriminator2(point_clouds, embedded_label):
     is_training_pl = tf.constant([True])
     # Get model and loss
     #with tf.variable_scope('Discriminator', reuse=tf.AUTO_REUSE):
@@ -303,10 +365,13 @@ def train():
         embedded_label_G = embedding_ops.embedding_lookup(embeddingG, cloud_labelsG)
         G_input = noise, embedded_label_G, partial_featureG
         G_output = conditional_generator(G_input)
+        with tf.variable_scope('G_transform_net1', reuse=tf.AUTO_REUSE) as sc:
+            is_training = tf.constant([True])
+            T_transformed = input_transform_net_no_bn(G_output, is_training, K=3)
     with tf.variable_scope('Discriminator') as sc:
         embeddingD = variable_scope.get_variable('embedding', [40, FLAGS.embeding_dim])
         embedded_label_D = embedding_ops.embedding_lookup(embeddingD, cloud_labelsD)
-        D_output_trainG = conditional_discriminator(G_output, embedded_label_D)
+        D_output_trainG = conditional_discriminator2(T_transformed, embedded_label_D)
         #D_input1_trainD = tf.concat([point_cloudsD, G_output], axis=0)
         #D_input2_trainD = tf.concat([cloud_labelsD, cloud_labelsG], axis=0)
         sc.reuse_variables()
