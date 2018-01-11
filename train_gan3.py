@@ -365,13 +365,13 @@ def train():
         embedded_label_G = embedding_ops.embedding_lookup(embeddingG, cloud_labelsG)
         G_input = noise, embedded_label_G, partial_featureG
         G_output = conditional_generator(G_input)
-        with tf.variable_scope('G_transform_net1', reuse=tf.AUTO_REUSE) as sc:
-            is_training = tf.constant([True])
-            T_transformed = input_transform_net_no_bn(G_output, is_training, K=3)
+        #with tf.variable_scope('G_transform_net1', reuse=tf.AUTO_REUSE) as sc:
+        #    is_training = tf.constant([True])
+        #    T_transformed = input_transform_net_no_bn(G_output, is_training, K=3)
     with tf.variable_scope('Discriminator') as sc:
         embeddingD = variable_scope.get_variable('embedding', [40, FLAGS.embeding_dim])
         embedded_label_D = embedding_ops.embedding_lookup(embeddingD, cloud_labelsD)
-        D_output_trainG = conditional_discriminator2(T_transformed, embedded_label_D)
+        D_output_trainG = conditional_discriminator2(G_output, embedded_label_D)
         #D_input1_trainD = tf.concat([point_cloudsD, G_output], axis=0)
         #D_input2_trainD = tf.concat([cloud_labelsD, cloud_labelsG], axis=0)
         sc.reuse_variables()
