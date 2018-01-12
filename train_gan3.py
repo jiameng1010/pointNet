@@ -33,7 +33,7 @@ parser.add_argument('--optimizer', default='adam', help='adam or momentum [defau
 parser.add_argument('--decay_step', type=int, default=80000, help='Decay step for lr decay [default: 200000]')
 parser.add_argument('--decay_rate', type=float, default=0.7, help='Decay rate for lr decay [default: 0.8]')
 FLAGS = parser.parse_args()
-FLAGS.noise_dims = 32
+FLAGS.noise_dims = 16
 FLAGS.max_number_of_steps = 120
 FLAGS.embeding_dim = 32
 
@@ -52,7 +52,7 @@ DECAY_RATE = FLAGS.decay_rate
 
 MODEL = importlib.import_module(FLAGS.model)
 
-LOG_DIR = './log/gan_log_16'
+LOG_DIR = './log/gan_log_17'
 os.system('mkdir %s' % (LOG_DIR))
 os.system('mkdir %s' % (LOG_DIR + '/demo'))
 LOG_FOUT = open(os.path.join(LOG_DIR, 'log_train.txt'), 'w')
@@ -280,9 +280,9 @@ def generate_cloud(feature, noise):
     point = layers.dropout(point, keep_prob=0.8)
     point = layers.fully_connected(point, 128)#, activation_fn=tf.nn.leaky_relu)
     point = layers.dropout(point, keep_prob=0.8)
-    point = layers.fully_connected(point, 128)#, activation_fn=tf.nn.leaky_relu)
-    point = layers.dropout(point, keep_prob=0.8)
-    point = layers.fully_connected(point, 32)#, activation_fn=tf.nn.leaky_relu)
+    #point = layers.fully_connected(point, 128)#, activation_fn=tf.nn.leaky_relu)
+    #point = layers.dropout(point, keep_prob=0.8)
+    #point = layers.fully_connected(point, 32)#, activation_fn=tf.nn.leaky_relu)
     point = layers.fully_connected(point, 32)#, activation_fn=tf.nn.leaky_relu)
     point = layers.fully_connected(point, 16)#, activation_fn=tf.nn.leaky_relu)
     point = layers.fully_connected(point, 3, activation_fn=tf.nn.tanh)
@@ -302,13 +302,11 @@ def conditional_generator(inputs):
             net = tfgan.features.condition_tensor(noise, cloud_labels)
         net = layers.fully_connected(noise, 64)#, activation_fn=tf.nn.leaky_relu)
         net = layers.fully_connected(net, 128)#, activation_fn=tf.nn.leaky_relu)
-        #with tf.variable_scope('conditioning2'):
-        #    net = tfgan.features.condition_tensor(net, cloud_labels)
-        net = layers.fully_connected(net, 128)
+        with tf.variable_scope('conditioning2'):
+            net = tfgan.features.condition_tensor(net, cloud_labels)
         net = layers.fully_connected(net, 256)#, activation_fn=tf.nn.leaky_relu)
-        #with tf.variable_scope('conditioning3'):
-        #    net = tfgan.features.condition_tensor(net, cloud_labels)
-        net = layers.fully_connected(net, 256)
+        with tf.variable_scope('conditioning3'):
+            net = tfgan.features.condition_tensor(net, cloud_labels)
         net = layers.fully_connected(net, 512)#, activation_fn=tf.nn.leaky_relu)
         net = tfgan.features.condition_tensor(net, partial_feature)
         feature = layers.fully_connected(net, 1024)
