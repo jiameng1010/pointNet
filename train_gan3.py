@@ -520,7 +520,7 @@ def train_joint(sess, sess2, ops, train_writer, save_for_val=False):
                      ops['cloud_labelsD']: data[2],
                      ops['point_cloudsD']: data[0],
                      ops['partial_featureG']: data[3]}
-        if np.random.rand() <= 0.8:
+        if np.random.rand() <= 0.7:
             summary, step, _, lossG, lossD, pred_val, AcD, AcG, AlD, AlG = sess.run([ops['merged'], ops['global_step'],
                                                                                     ops['train_opG'], ops['lossG'],
                                                                                     ops['lossD'], ops['predG'],
