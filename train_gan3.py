@@ -52,7 +52,7 @@ DECAY_RATE = FLAGS.decay_rate
 
 MODEL = importlib.import_module(FLAGS.model)
 
-LOG_DIR = './log/gan_log_17'
+LOG_DIR = './log/gan_log_18'
 os.system('mkdir %s' % (LOG_DIR))
 os.system('mkdir %s' % (LOG_DIR + '/demo'))
 LOG_FOUT = open(os.path.join(LOG_DIR, 'log_train.txt'), 'w')
