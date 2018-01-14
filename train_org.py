@@ -260,11 +260,12 @@ def eval_one_epoch(sess, ops, test_writer):
     log_string('eval accuracy: %f' % (total_correct / float(total_seen)))
     log_string('eval avg class acc: %f' % (
     np.mean(np.array(total_correct_class) / np.array(total_seen_class, dtype=np.float))))
-    summary = tf.Summary(value=[tf.Summary.Value(tag='accuracy', simple_value=acc)])
+    summary = tf.Summary(value=[tf.Summary.Value(tag='accuracy', simple_value=(total_correct / float(total_seen)))])
     test_writer.add_summary(summary, step)
-    summary = tf.Summary(value=[tf.Summary.Value(tag='loss', simple_value=los)])
+    summary = tf.Summary(value=[tf.Summary.Value(tag='loss', simple_value=(loss_sum / float(total_seen)))])
     test_writer.add_summary(summary, step)
-
+    summary = tf.Summary(value=[tf.Summary.Value(tag='avg_class_acc', simple_value=np.mean(np.array(total_correct_class) / np.array(total_seen_class, dtype=np.float)))])
+    test_writer.add_summary(summary, step)
 
 if __name__ == "__main__":
     train()
