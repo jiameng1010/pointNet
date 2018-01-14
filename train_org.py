@@ -245,6 +245,7 @@ def eval_one_epoch(sess, ops, test_writer):
                          ops['is_training_pl']: is_training}
             summary, step, loss_val, pred_val = sess.run([ops['merged'], ops['step'],
                                                           ops['loss'], ops['pred']], feed_dict=feed_dict)
+            test_writer.add_summary(summary, step)
             pred_val = np.argmax(pred_val, 1)
             correct = np.sum(pred_val == current_label[start_idx:end_idx])
             total_correct += correct
