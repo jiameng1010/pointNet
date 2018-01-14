@@ -245,7 +245,7 @@ def eval_one_epoch(sess, ops, test_writer):
                          ops['is_training_pl']: is_training}
             summary, step, loss_val, pred_val = sess.run([ops['merged'], ops['step'],
                                                           ops['loss'], ops['pred']], feed_dict=feed_dict)
-            test_writer.add_summary(summary, step)
+            #test_writer.add_summary(summary, step)
             pred_val = np.argmax(pred_val, 1)
             correct = np.sum(pred_val == current_label[start_idx:end_idx])
             total_correct += correct
@@ -260,6 +260,10 @@ def eval_one_epoch(sess, ops, test_writer):
     log_string('eval accuracy: %f' % (total_correct / float(total_seen)))
     log_string('eval avg class acc: %f' % (
     np.mean(np.array(total_correct_class) / np.array(total_seen_class, dtype=np.float))))
+    summary = tf.Summary(value=[tf.Summary.Value(tag='accuracy', simple_value=acc)])
+    test_writer.add_summary(summary, step)
+    summary = tf.Summary(value=[tf.Summary.Value(tag='loss', simple_value=los)])
+    test_writer.add_summary(summary, step)
 
 
 if __name__ == "__main__":
