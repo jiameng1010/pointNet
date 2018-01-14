@@ -25,13 +25,13 @@ def get_model_rbf(point_cloud, is_training, bn_decay=None):
     point_cloud_transformed = tf.matmul(point_cloud, transform)
     point_cloud_transformed = tf.expand_dims(point_cloud_transformed, 3)
 
-    centroids = tf.constant(np.random.randn(1, 1, 3, 1024), dtype=tf.float32)
+    #centroids = tf.constant(np.random.randn(1, 1, 3, 1024), dtype=tf.float32)
     centroids = tf.get_variable('centroids',
-                                [1, 1, 3, 1024],
-                                initializer=tf.constant_initializer(np.random.randn(1, 1, 3, 1024)),
+                                [1, 1, 3, 2048],
+                                initializer=tf.constant_initializer(np.random.randn(1, 1, 3, 2048)),
                                 dtype=tf.float32)
 
-    feature = tf.tile(point_cloud_transformed, [1, 1, 1, 1024])
+    feature = tf.tile(point_cloud_transformed, [1, 1, 1, 2048])
 
     bias = tf.tile(centroids, [32, 1024, 1, 1])
 
