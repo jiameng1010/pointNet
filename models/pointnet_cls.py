@@ -44,10 +44,10 @@ def get_model_rbf(point_cloud, is_training, bn_decay=None):
                              padding='VALID', scope='maxpool')
 
     net = tf.reshape(features, [batch_size, -1])
-    #net = tf_util.fully_connected(net, 1024, bn=True, is_training=is_training,
-    #                              scope='fc0', bn_decay=bn_decay)
-    #net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
-    #                      scope='dp1')
+    net = tf_util.fully_connected(net, 1024, bn=True, is_training=is_training,
+                                  scope='fc0', bn_decay=bn_decay)
+    net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
+                          scope='dp1')
     net = tf_util.fully_connected(net, 512, bn=True, is_training=is_training,
                                   scope='fc1', bn_decay=bn_decay)
     net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
