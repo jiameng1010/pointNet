@@ -79,11 +79,11 @@ def get_model_rbf2(point_cloud, is_training, bn_decay=None):
                                 initializer=tf.constant_initializer(np.random.randn(1, 1, 3, c1)),
                                 dtype=tf.float32)
 
-    #sub_centroids = tf.get_variable('sub_centroids',
-    #                                [1, 1, 3, c2],
-    #                                initializer=tf.constant_initializer(0.05*np.random.randn(1, 1, 3, c2)),
-    #                                dtype=tf.float32)
-    sub_centroids = tf.constant(0.05*np.random.randn(1, 1, 3, c2), dtype=tf.float32)
+    sub_centroids = tf.get_variable('sub_centroids',
+                                    [1, 1, 3, c2],
+                                    initializer=tf.constant_initializer(0.05*np.random.randn(1, 1, 3, c2)),
+                                    dtype=tf.float32)
+    #sub_centroids = tf.constant(0.05*np.random.randn(1, 1, 3, c2), dtype=tf.float32)
     sub_bias = tf.add(tf.tile(tf.expand_dims(sub_centroids, 4), [1, 1, 1, 1, c1]),
                       tf.tile(tf.expand_dims(centroids, 3), [1, 1, 1, c2, 1]))
     sub_bias = tf.tile(sub_bias, [32, 1024, 1, 1, 1])
