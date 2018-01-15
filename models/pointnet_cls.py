@@ -154,7 +154,7 @@ def get_model_rbf3(point_cloud, is_training, bn_decay=None):
 
     sub_net = tf.subtract(sub_feature, sub_bias)
     sub_net = tf.norm(sub_net, axis=2, keep_dims=True)
-    sub_net = tf.exp(-sub_net)
+    sub_net = tf.exp(-tf.square(sub_net))
     sub_net = tf.squeeze(sub_net)
     sub_feature = tf_util.max_pool2d(sub_net, [num_point,1], stride=[1, 1],
                              padding='VALID', scope='maxpool')
