@@ -131,7 +131,7 @@ def get_model_rbf3(point_cloud, is_training, bn_decay=None):
     point_cloud_transformed = tf.expand_dims(point_cloud_transformed, 3)
 
     #centroids = tf.constant(np.random.randn(1, 1, 3, 1024), dtype=tf.float32)
-    c1 = 256
+    c1 = 128
     c2 = 32
     centroids = tf.get_variable('centroids',
                                 [1, 1, 3, c1],
