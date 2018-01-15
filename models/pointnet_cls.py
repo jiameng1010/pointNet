@@ -161,7 +161,7 @@ def get_model_rbf3(point_cloud, is_training, bn_decay=None):
     sub_net = tf_util.conv2d(sub_net, 4, [1,1],
                                  padding='VALID', stride=[1,1],
                                  bn=True, is_training=is_training,
-                                 scope='mini_conv1', bn_decay=bn_decay)
+                                 scope='mini_conv2', bn_decay=bn_decay)
     sub_net = tf.squeeze(sub_net)
 
     feature = tf.tile(point_cloud_transformed, [1, 1, 1, c1])
