@@ -154,10 +154,10 @@ def get_model_rbf3(point_cloud, is_training, bn_decay=None):
     sub_net = tf.transpose(sub_net, perm=[0, 1, 3, 2])
     sub_net = tf_util.max_pool2d(sub_net, [num_point,1], stride=[1, 1],
                              padding='VALID', scope='maxpool')
-    sub_net = tf_util.conv2d(sub_net, 16, [1,1],
-                                 padding='VALID', stride=[1,1],
-                                 bn=True, is_training=is_training,
-                                 scope='mini_conv1', bn_decay=bn_decay)
+    #sub_net = tf_util.conv2d(sub_net, 16, [1,1],
+    #                             padding='VALID', stride=[1,1],
+    #                             bn=True, is_training=is_training,
+    #                             scope='mini_conv1', bn_decay=bn_decay)
     sub_net = tf_util.conv2d(sub_net, 4, [1,1],
                                  padding='VALID', stride=[1,1],
                                  bn=True, is_training=is_training,
