@@ -46,6 +46,7 @@ LOG_DIR = FLAGS.log_dir
 if not os.path.exists(LOG_DIR): os.mkdir(LOG_DIR)
 os.system('cp %s %s' % (MODEL_FILE, LOG_DIR))  # bkp of model def
 os.system('cp train.py %s' % (LOG_DIR))  # bkp of train procedure
+os.system('mkdir %s' % (LOG_DIR + '/demo'))
 LOG_FOUT = open(os.path.join(LOG_DIR, 'log_train.txt'), 'w')
 LOG_FOUT.write(str(FLAGS) + '\n')
 
@@ -108,7 +109,7 @@ def train():
             tf.summary.scalar('bn_decay', bn_decay)
 
             # Get model and loss
-            pred, end_points, G_features = MODEL.get_model_rbf2(pointclouds_pl, is_training_pl, bn_decay=bn_decay)
+            pred, end_points, G_features, centroids = MODEL.get_model_rbf(pointclouds_pl, is_training_pl, bn_decay=bn_decay)
             loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=pred, labels=labels_pl)
             loss = tf.reduce_mean(loss)
             tf.summary.scalar('loss', loss)
@@ -157,7 +158,8 @@ def train():
                'loss': loss,
                'train_op': train_op,
                'merged': merged,
-               'step': batch}
+               'step': batch,
+               'centroids': centroids}
 
         for epoch in range(MAX_EPOCH):
             log_string('**** EPOCH %03d ****' % (epoch))
@@ -204,8 +206,8 @@ def train_one_epoch(sess, ops, train_writer):
             feed_dict = {ops['pointclouds_pl']: jittered_data,
                          ops['labels_pl']: current_label[start_idx:end_idx],
                          ops['is_training_pl']: is_training, }
-            summary, step, _, loss_val, pred_val = sess.run([ops['merged'], ops['step'],
-                                                             ops['train_op'], ops['loss'], ops['pred']],
+            summary, step, _, loss_val, pred_val, centroids = sess.run([ops['merged'], ops['step'],
+                                                             ops['train_op'], ops['loss'], ops['pred'], ops['centroids']],
                                                             feed_dict=feed_dict)
             train_writer.add_summary(summary, step)
             pred_val = np.argmax(pred_val, 1)
@@ -213,6 +215,10 @@ def train_one_epoch(sess, ops, train_writer):
             total_correct += correct
             total_seen += BATCH_SIZE
             loss_sum += loss_val
+            if np.random.rand() <= 0.001:
+                h5r = h5py.File((LOG_DIR + '/demo/centroids' + str(step).zfill(8) + '.h5'), 'w')
+                h5r.create_dataset('data', data=centroids)
+                h5r.close()
 
         log_string('mean loss: %f' % (loss_sum / float(num_batches)))
         log_string('accuracy: %f' % (total_correct / float(total_seen)))
