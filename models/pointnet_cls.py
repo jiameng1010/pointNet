@@ -27,11 +27,11 @@ def get_model_rbf(point_cloud, is_training, bn_decay=None):
 
     #centroids = tf.constant(np.random.randn(1, 1, 3, 1024), dtype=tf.float32)
     centroids = tf.get_variable('centroids',
-                                [1, 1, 3, 512],
-                                initializer=tf.constant_initializer(np.random.randn(1, 1, 3, 512)),
+                                [1, 1, 3, 1024],
+                                initializer=tf.constant_initializer(np.random.randn(1, 1, 3, 1024)),
                                 dtype=tf.float32)
 
-    feature = tf.tile(point_cloud_transformed, [1, 1, 1, 512])
+    feature = tf.tile(point_cloud_transformed, [1, 1, 1, 1024])
 
     bias = tf.tile(centroids, [32, 1024, 1, 1])
 
@@ -48,11 +48,11 @@ def get_model_rbf(point_cloud, is_training, bn_decay=None):
     #                              scope='fc0', bn_decay=bn_decay)
     #net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
     #                      scope='dp1')
-    net = tf_util.fully_connected(net, 256, bn=True, is_training=is_training,
+    net = tf_util.fully_connected(net, 512, bn=True, is_training=is_training,
                                   scope='fc1', bn_decay=bn_decay)
     net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
                           scope='dp1')
-    net = tf_util.fully_connected(net, 128, bn=True, is_training=is_training,
+    net = tf_util.fully_connected(net, 256, bn=True, is_training=is_training,
                                   scope='fc2', bn_decay=bn_decay)
     net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
                           scope='dp2')
