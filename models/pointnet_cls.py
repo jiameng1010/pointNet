@@ -131,7 +131,7 @@ def get_model_rbf3(point_cloud, is_training, bn_decay=None):
     point_cloud_transformed = tf.expand_dims(point_cloud_transformed, 3)
 
     #centroids = tf.constant(np.random.randn(1, 1, 3, 1024), dtype=tf.float32)
-    c1 = 64
+    c1 = 256
     c2 = 32
     centroids = tf.get_variable('centroids',
                                 [1, 1, 3, c1],
@@ -143,14 +143,13 @@ def get_model_rbf3(point_cloud, is_training, bn_decay=None):
                                     initializer=tf.constant_initializer(0.05*np.random.randn(1, 1, 3, c2)),
                                     dtype=tf.float32)
     #sub_centroids = tf.constant(0.05*np.random.randn(1, 1, 3, c2), dtype=tf.float32)
+
     sub_bias = tf.add(tf.tile(tf.expand_dims(sub_centroids, 4), [1, 1, 1, 1, c1]),
                       tf.tile(tf.expand_dims(centroids, 3), [1, 1, 1, c2, 1]))
-    sub_bias = tf.tile(sub_bias, [32, 1024, 1, 1, 1])
+    sub_bias = tf.tile(sub_bias, [batch_size, 1024, 1, 1, 1])
     sub_feature = tf.tile(tf.expand_dims(point_cloud_transformed, 4), [1, 1, 1, c2, c1])
-    sub_net = tf.subtract(sub_feature, sub_bias)
-    sub_net = tf.norm(sub_net, axis=2, keep_dims=True)
-    sub_net = tf.exp(-tf.square(sub_net))
-    sub_net = tf.squeeze(sub_net)
+    #sub_net = tf.exp(-tf.square(tf.norm(tf.subtract(sub_feature, sub_bias), axis=2, keep_dims=True)))
+    sub_net = tf.squeeze(tf.exp(-tf.square(tf.norm(tf.subtract(sub_feature, sub_bias), axis=2, keep_dims=True))))
     sub_net = tf.transpose(sub_net, perm=[0, 1, 3, 2])
     sub_net = tf_util.max_pool2d(sub_net, [num_point,1], stride=[1, 1],
                              padding='VALID', scope='maxpool')
@@ -166,7 +165,7 @@ def get_model_rbf3(point_cloud, is_training, bn_decay=None):
 
 
     feature = tf.tile(point_cloud_transformed, [1, 1, 1, c1])
-    bias = tf.tile(centroids, [32, 1024, 1, 1])
+    bias = tf.tile(centroids, [batch_size, 1024, 1, 1])
     net = tf.subtract(feature, bias)
     net = tf.norm(net, axis=2, keep_dims=True)
     net = tf.exp(-tf.square(net))
