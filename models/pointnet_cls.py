@@ -164,6 +164,7 @@ def get_model_rbf3(point_cloud, is_training, bn_decay=None):
                                  scope='mini_conv2', bn_decay=bn_decay)
     sub_net = tf.squeeze(sub_net)
 
+
     feature = tf.tile(point_cloud_transformed, [1, 1, 1, c1])
     bias = tf.tile(centroids, [32, 1024, 1, 1])
     net = tf.subtract(feature, bias)
