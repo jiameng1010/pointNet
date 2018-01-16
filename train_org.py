@@ -22,11 +22,11 @@ parser.add_argument('--model', default='pointnet_cls',
 parser.add_argument('--log_dir', default='log/log_rbf8', help='Log dir [default: log]')
 parser.add_argument('--num_point', type=int, default=1024, help='Point Number [256/512/1024/2048] [default: 1024]')
 parser.add_argument('--max_epoch', type=int, default=250, help='Epoch to run [default: 250]')
-parser.add_argument('--batch_size', type=int, default=4, help='Batch Size during training [default: 32]')
-parser.add_argument('--learning_rate', type=float, default=0.001, help='Initial learning rate [default: 0.001]')
+parser.add_argument('--batch_size', type=int, default=16, help='Batch Size during training [default: 32]')
+parser.add_argument('--learning_rate', type=float, default=0.005, help='Initial learning rate [default: 0.001]')
 parser.add_argument('--momentum', type=float, default=0.9, help='Initial learning rate [default: 0.9]')
 parser.add_argument('--optimizer', default='adam', help='adam or momentum [default: adam]')
-parser.add_argument('--decay_step', type=int, default=1000000, help='Decay step for lr decay [default: 200000]')
+parser.add_argument('--decay_step', type=int, default=300000, help='Decay step for lr decay [default: 200000]')
 parser.add_argument('--decay_rate', type=float, default=0.7, help='Decay rate for lr decay [default: 0.8]')
 FLAGS = parser.parse_args()
 
@@ -45,7 +45,7 @@ MODEL_FILE = os.path.join(BASE_DIR, 'models', FLAGS.model + '.py')
 LOG_DIR = FLAGS.log_dir
 if not os.path.exists(LOG_DIR): os.mkdir(LOG_DIR)
 os.system('cp %s %s' % (MODEL_FILE, LOG_DIR))  # bkp of model def
-os.system('cp train.py %s' % (LOG_DIR))  # bkp of train procedure
+os.system('cp train_org.py %s' % (LOG_DIR))  # bkp of train procedure
 os.system('mkdir %s' % (LOG_DIR + '/demo'))
 LOG_FOUT = open(os.path.join(LOG_DIR, 'log_train.txt'), 'w')
 LOG_FOUT.write(str(FLAGS) + '\n')
@@ -109,7 +109,7 @@ def train():
             tf.summary.scalar('bn_decay', bn_decay)
 
             # Get model and loss
-            pred, end_points, G_features, centroids = MODEL.get_model_rbf3(pointclouds_pl, is_training_pl, bn_decay=bn_decay)
+            pred, end_points, G_features, centroids = MODEL.get_model_rbf(pointclouds_pl, is_training_pl, bn_decay=bn_decay)
             loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=pred, labels=labels_pl)
             loss = tf.reduce_mean(loss)
             tf.summary.scalar('loss', loss)
