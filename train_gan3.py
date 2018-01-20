@@ -83,6 +83,16 @@ def get_learning_rateD(batch):
     learning_rate = tf.maximum(learning_rate, 0.00005) # CLIP THE LEARNING RATE!
     return learning_rate
 
+def get_bn_decay(batch):
+    bn_momentum = tf.train.exponential_decay(
+        BN_INIT_DECAY,
+        batch * BATCH_SIZE,
+        BN_DECAY_DECAY_STEP,
+        BN_DECAY_DECAY_RATE,
+        staircase=True)
+    bn_decay = tf.minimum(BN_DECAY_CLIP, 1 - bn_momentum)
+    return bn_decay
+
 def provide_data(sess2):
     BATCH_SIZE = FLAGS.batch_size
     current_data, current_label = provider.loadDataFile('./data/h5/traincompleteall.h5')
@@ -340,6 +350,7 @@ def train():
     stepsG = tf.Variable(0)
     stepsD = tf.Variable(0)
     global_step = stepsD + stepsG
+    bn_decay = get_bn_decay(stepsD)
 
     ## setup input data
     partial_featureG = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, 1024))
@@ -369,14 +380,14 @@ def train():
         #    is_training = tf.constant([True])
         #    T_transformed = input_transform_net_no_bn(G_output, is_training, K=3)
     with tf.variable_scope('Discriminator') as sc:
-        is_training_pl = tf.constant([True])
+        is_training_pl = tf.constant(True)
         embeddingD = variable_scope.get_variable('embedding', [40, FLAGS.embeding_dim])
         embedded_label_D = embedding_ops.embedding_lookup(embeddingD, cloud_labelsD)
-        D_output_trainG = MODEL.get_model_rbf0_gan(G_output, is_training_pl)
+        D_output_trainG = MODEL.get_model_rbf0_gan(G_output, is_training_pl, bn_decay=bn_decay)
         #D_input1_trainD = tf.concat([point_cloudsD, G_output], axis=0)
         #D_input2_trainD = tf.concat([cloud_labelsD, cloud_labelsG], axis=0)
         sc.reuse_variables()
-        D_output_trainD = MODEL.get_model_rbf0_gan(point_cloudsD, is_training_pl)
+        D_output_trainD = MODEL.get_model_rbf0_gan(point_cloudsD, is_training_pl, bn_decay=bn_decay)
 
 
     ## setup loss
