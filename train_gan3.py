@@ -27,7 +27,7 @@ parser.add_argument('--log_dir', default='log', help='Log dir [default: log]')
 parser.add_argument('--num_point', type=int, default=1024, help='Point Number [256/512/1024/2048] [default: 1024]')
 parser.add_argument('--max_epoch', type=int, default=250, help='Epoch to run [default: 250]')
 parser.add_argument('--batch_size', type=int, default=32, help='Batch Size during training [default: 32]')
-parser.add_argument('--learning_rate', type=float, default=0.0001, help='Initial learning rate [default: 0.001]')
+parser.add_argument('--learning_rate', type=float, default=0.001, help='Initial learning rate [default: 0.001]')
 parser.add_argument('--momentum', type=float, default=0.9, help='Initial learning rate [default: 0.9]')
 parser.add_argument('--optimizer', default='adam', help='adam or momentum [default: adam]')
 parser.add_argument('--decay_step', type=int, default=80000, help='Decay step for lr decay [default: 200000]')
@@ -70,12 +70,12 @@ def get_learning_rateG(batch):
                         DECAY_STEP,          # Decay step.
                         DECAY_RATE,          # Decay rate.
                         staircase=True)
-    learning_rate = tf.maximum(learning_rate, 0.0005) # CLIP THE LEARNING RATE!
+    learning_rate = tf.maximum(learning_rate, 0.00005) # CLIP THE LEARNING RATE!
     return learning_rate
 
 def get_learning_rateD(batch):
     learning_rate = tf.train.exponential_decay(
-                        BASE_LEARNING_RATE,  # Base learning rate.
+                        0.1*BASE_LEARNING_RATE,  # Base learning rate.
                         batch * BATCH_SIZE,  # Current index into the dataset.
                         DECAY_STEP,          # Decay step.
                         DECAY_RATE,          # Decay rate.
@@ -533,7 +533,7 @@ def train_joint(sess, sess2, ops, train_writer, save_for_val=False):
                      ops['cloud_labelsD']: data[2],
                      ops['point_cloudsD']: data[0],
                      ops['partial_featureG']: data[3]}
-        if np.random.rand() <= 0.7:
+        if np.random.rand() <= 0.8:
             summary, step, _, lossG, lossD, pred_val, AcD, AcG, AlD, AlG = sess.run([ops['merged'], ops['global_step'],
                                                                                     ops['train_opG'], ops['lossG'],
                                                                                     ops['lossD'], ops['predG'],
