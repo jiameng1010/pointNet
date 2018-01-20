@@ -52,7 +52,7 @@ DECAY_RATE = FLAGS.decay_rate
 
 MODEL = importlib.import_module(FLAGS.model)
 
-LOG_DIR = './log/gan_log_18'
+LOG_DIR = './log/gan_log_19'
 os.system('mkdir %s' % (LOG_DIR))
 os.system('mkdir %s' % (LOG_DIR + '/demo'))
 LOG_FOUT = open(os.path.join(LOG_DIR, 'log_train.txt'), 'w')
@@ -369,13 +369,14 @@ def train():
         #    is_training = tf.constant([True])
         #    T_transformed = input_transform_net_no_bn(G_output, is_training, K=3)
     with tf.variable_scope('Discriminator') as sc:
+        is_training_pl = tf.constant([True])
         embeddingD = variable_scope.get_variable('embedding', [40, FLAGS.embeding_dim])
         embedded_label_D = embedding_ops.embedding_lookup(embeddingD, cloud_labelsD)
-        D_output_trainG = conditional_discriminator2(G_output, embedded_label_D)
+        D_output_trainG = MODEL.get_model_rbf0_gan(G_output, is_training_pl)
         #D_input1_trainD = tf.concat([point_cloudsD, G_output], axis=0)
         #D_input2_trainD = tf.concat([cloud_labelsD, cloud_labelsG], axis=0)
         sc.reuse_variables()
-        D_output_trainD = conditional_discriminator(point_cloudsD, embedded_label_D)
+        D_output_trainD = MODEL.get_model_rbf0_gan(point_cloudsD, is_training_pl)
 
 
     ## setup loss
