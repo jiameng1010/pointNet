@@ -67,7 +67,7 @@ def get_model_rbf0_gan(point_cloud, is_training, bn_decay=None):
     end_points = {}
 
     with tf.variable_scope('transform_net1', reuse=tf.AUTO_REUSE) as sc:
-        transform = input_transform_net(point_cloud, is_training, bn_decay, K=3)
+        transform = input_transform_net_no_bn(point_cloud, is_training, bn_decay, K=3)
     point_cloud_transformed = tf.matmul(point_cloud, transform)
     point_cloud_transformed = tf.expand_dims(point_cloud_transformed, 3)
 
@@ -94,11 +94,11 @@ def get_model_rbf0_gan(point_cloud, is_training, bn_decay=None):
     #                              scope='fc0', bn_decay=bn_decay)
     #net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
     #                      scope='dp1')
-    net = tf_util.fully_connected(net, 512, bn=True, is_training=is_training,
+    net = tf_util.fully_connected(net, 512, bn=False, is_training=is_training,
                                   scope='fc1', bn_decay=bn_decay)
     net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
                           scope='dp1')
-    net = tf_util.fully_connected(net, 256, bn=True, is_training=is_training,
+    net = tf_util.fully_connected(net, 256, bn=False, is_training=is_training,
                                   scope='fc2', bn_decay=bn_decay)
     net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
                           scope='dp2')
