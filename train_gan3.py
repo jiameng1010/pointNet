@@ -75,7 +75,7 @@ def get_learning_rateG(batch):
 
 def get_learning_rateD(batch):
     learning_rate = tf.train.exponential_decay(
-                        0.1*BASE_LEARNING_RATE,  # Base learning rate.
+                        BASE_LEARNING_RATE,  # Base learning rate.
                         batch * BATCH_SIZE,  # Current index into the dataset.
                         DECAY_STEP,          # Decay step.
                         DECAY_RATE,          # Decay rate.
@@ -533,7 +533,7 @@ def train_joint(sess, sess2, ops, train_writer, save_for_val=False):
                      ops['cloud_labelsD']: data[2],
                      ops['point_cloudsD']: data[0],
                      ops['partial_featureG']: data[3]}
-        if np.random.rand() <= 0.8:
+        if np.random.rand() <= 0.7:
             summary, step, _, lossG, lossD, pred_val, AcD, AcG, AlD, AlG = sess.run([ops['merged'], ops['global_step'],
                                                                                     ops['train_opG'], ops['lossG'],
                                                                                     ops['lossD'], ops['predG'],
