@@ -416,6 +416,7 @@ def get_model_half(point_cloud, is_training, bn_decay=None):
 
     return net, end_points, features
 
+
 def get_model(point_cloud, is_training, bn_decay=None):
     """ Classification PointNet, input is BxNx3, output Bx40 """
     batch_size = point_cloud.get_shape()[0].value
