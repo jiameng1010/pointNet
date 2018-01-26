@@ -123,6 +123,8 @@ def get_model_rbf(point_cloud, is_training, bn_decay=None):
                                 [1, 1, 3, c1],
                                 initializer=tf.constant_initializer(0.05*np.random.randn(1, 1, 3, c1)),
                                 dtype=tf.float32)
+    #weights = tf.grt_variable('weights',
+    #                          [])
 
     feature = tf.tile(point_cloud_transformed, [1, 1, 1, c1])
 
