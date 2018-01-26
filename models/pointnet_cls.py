@@ -124,7 +124,7 @@ def get_model_rbf(point_cloud, is_training, bn_decay=None):
                                 initializer=tf.constant_initializer(0.5*np.random.randn(1, 1, 3, c1)),
                                 dtype=tf.float32)
     #the per-centroids weights to change the shape of the multi-norm
-    weights = tf.grt_variable('weights',
+    weights = tf.get_variable('weights',
                               [1, 1, 4, c1],
                               initializer=tf.constant_initializer(0.01 * np.random.randn(1, 1, 3, c1)),)
 
