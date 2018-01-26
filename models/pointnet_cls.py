@@ -143,6 +143,7 @@ def get_model_rbf(point_cloud, is_training, bn_decay=None):
                              #tf.norm(net, ord=4, axis=2, keep_dims=True),
                              tf.norm(net, ord=np.inf, axis=2, keep_dims=True),
                             ], axis=2))
+    net = tf.multiply(net, tf.tile(weights, [batch_size, num_point, 1, 1]))
     #net = tf.exp(-net)
     # Symmetric function: max pooling
     features = tf_util.max_pool2d(net, [num_point,1],
