@@ -121,10 +121,12 @@ def get_model_rbf(point_cloud, is_training, bn_decay=None):
     #centroids = tf.constant(np.random.randn(1, 1, 3, 1024), dtype=tf.float32)
     centroids = tf.get_variable('centroids',
                                 [1, 1, 3, c1],
-                                initializer=tf.constant_initializer(0.05*np.random.randn(1, 1, 3, c1)),
+                                initializer=tf.constant_initializer(0.5*np.random.randn(1, 1, 3, c1)),
                                 dtype=tf.float32)
-    #weights = tf.grt_variable('weights',
-    #                          [])
+    #the per-centroids weights to change the shape of the multi-norm
+    weights = tf.grt_variable('weights',
+                              [1, 1, 4, c1],
+                              initializer=tf.constant_initializer(0.01 * np.random.randn(1, 1, 3, c1)),)
 
     feature = tf.tile(point_cloud_transformed, [1, 1, 1, c1])
 
