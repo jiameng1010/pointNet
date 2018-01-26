@@ -394,7 +394,7 @@ def get_model_half(point_cloud, is_training, bn_decay=None):
                                 [1, 1, 3, c1],
                                 initializer=tf.constant_initializer(0.5*np.random.randn(1, 1, 3, c1)),
                                 dtype=tf.float32)
-    net2 = tf.subtract(tf.tile(point_cloud_transformed, [1, 1, 1, c1]), tf.tile(centroids, [batch_size, num_point, 1, 1]))
+    net2 = tf.subtract(tf.tile(tf.expand_dims(point_cloud_transformed, 3), [1, 1, 1, c1]), tf.tile(centroids, [batch_size, num_point, 1, 1]))
     net2 = tf.norm(net2, axis=2, keep_dims=True)
     net2 = tf.exp(-net2)
     net = tf.concat([net, net2], axis=2)
