@@ -414,7 +414,7 @@ def get_model_half(point_cloud, is_training, bn_decay=None):
                           scope='dp2')
     net = tf_util.fully_connected(net, 40, activation_fn=None, scope='fc3')
 
-    return net, end_points, features
+    return net, end_points, features, centroids
 
 
 def get_model(point_cloud, is_training, bn_decay=None):
