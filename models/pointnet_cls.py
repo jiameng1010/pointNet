@@ -388,6 +388,17 @@ def get_model_half(point_cloud, is_training, bn_decay=None):
                          bn=True, is_training=is_training,
                          scope='conv5', bn_decay=bn_decay)
 
+    c1 = 512
+    #centroids = tf.constant(np.random.randn(1, 1, 3, 1024), dtype=tf.float32)
+    centroids = tf.get_variable('centroids',
+                                [1, 1, 3, c1],
+                                initializer=tf.constant_initializer(0.5*np.random.randn(1, 1, 3, c1)),
+                                dtype=tf.float32)
+    net2 = tf.subtract(tf.tile(point_cloud_transformed, [1, 1, 1, c1]), tf.tile(centroids, [batch_size, num_point, 1, 1]))
+    net2 = tf.norm(net2, axis=2, keep_dims=True)
+    net2 = tf.exp(-net2)
+    net = tf.concat([net, net2], axis=2)
+
     # Symmetric function: max pooling
     features = tf_util.max_pool2d(net, [num_point,1],
                              padding='VALID', scope='maxpool')

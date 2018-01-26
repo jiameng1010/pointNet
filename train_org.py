@@ -109,7 +109,7 @@ def train():
             tf.summary.scalar('bn_decay', bn_decay)
 
             # Get model and loss
-            pred, end_points, G_features, centroids = MODEL.get_model_rbf0(pointclouds_pl, is_training_pl, bn_decay=bn_decay)
+            pred, end_points, G_features, centroids = MODEL.get_model_half(pointclouds_pl, is_training_pl, bn_decay=bn_decay)
             loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=pred, labels=labels_pl)
             loss = tf.reduce_mean(loss)
             tf.summary.scalar('loss', loss)
