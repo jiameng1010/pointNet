@@ -19,7 +19,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--gpu', type=int, default=0, help='GPU to use [default: GPU 0]')
 parser.add_argument('--model', default='pointnet_cls',
                     help='Model name: pointnet_cls or pointnet_cls_basic [default: pointnet_cls]')
-parser.add_argument('--log_dir', default='log/log_rbf21', help='Log dir [default: log]')
+parser.add_argument('--log_dir', default='log/log_rbf22', help='Log dir [default: log]')
 parser.add_argument('--num_point', type=int, default=1024, help='Point Number [256/512/1024/2048] [default: 1024]')
 parser.add_argument('--max_epoch', type=int, default=250, help='Epoch to run [default: 250]')
 parser.add_argument('--batch_size', type=int, default=20, help='Batch Size during training [default: 32]')
@@ -109,7 +109,7 @@ def train():
             tf.summary.scalar('bn_decay', bn_decay)
 
             # Get model and loss
-            pred, end_points, G_features, centroids = MODEL.get_model_half(pointclouds_pl, is_training_pl, bn_decay=bn_decay)
+            pred, end_points, G_features, centroids = MODEL.get_model_rbf_transform(pointclouds_pl, is_training_pl, bn_decay=bn_decay)
             loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=pred, labels=labels_pl)
             loss = tf.reduce_mean(loss)
             tf.summary.scalar('loss', loss)
