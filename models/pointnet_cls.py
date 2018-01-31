@@ -444,7 +444,7 @@ def get_model_rbf_transform(point_cloud, is_training, bn_decay=None):
     net_transformed = tf.matmul(tf.squeeze(net, axis=[2]), transform)
     net_transformed = tf.expand_dims(net_transformed, [2])
 
-    c2 = 512
+    c2 = 256
     #centroids = tf.constant(np.random.randn(1, 1, 3, 1024), dtype=tf.float32)
     centroids2 = tf.get_variable('centroids2',
                                 [1, 1, c2, 64],
