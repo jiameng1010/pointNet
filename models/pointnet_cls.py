@@ -447,13 +447,12 @@ def get_model_rbf_transform(point_cloud, is_training, bn_decay=None):
     c2 = 1024
     #centroids = tf.constant(np.random.randn(1, 1, 3, 1024), dtype=tf.float32)
     centroids2 = tf.get_variable('centroids2',
-                                [1, 1, 3, c1],
-                                initializer=tf.constant_initializer(0.5*np.random.randn(1, 1, 3, c2)),
+                                [1, 1, c2, 64],
+                                initializer=tf.constant_initializer(0.5*np.random.randn(1, 1, c2, 64)),
                                 dtype=tf.float32)
-    net = tf.subtract(tf.tile(tf.expand_dims(net_transformed, 3), [1, 1, 1, c1]), tf.tile(centroids2, [batch_size, num_point, 1, 1]))
-    net = tf.norm(net, axis=2, keep_dims=True)
+    net = tf.subtract(tf.tile(net_transformed, [1, 1, c2, 1]), tf.tile(centroids2, [batch_size, num_point, 1, 1]))
+    net = tf.norm(net, axis=3, keep_dims=True)
     net = tf.exp(-net)
-    net = tf.concat([net, net], axis=2)
 
     # Symmetric function: max pooling
     features = tf_util.max_pool2d(net, [num_point,1],
