@@ -110,8 +110,9 @@ def train():
 
             # Get model and loss
             pred, end_points, G_features, centroids = MODEL.get_model_rbf_transform(pointclouds_pl, is_training_pl, bn_decay=bn_decay)
-            loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=pred, labels=labels_pl)
-            loss = tf.reduce_mean(loss)
+            #loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=pred, labels=labels_pl)
+            #loss = tf.reduce_mean(loss)
+            loss = MODEL.get_loss(pred, labels_pl, end_points)
             tf.summary.scalar('loss', loss)
 
             correct = tf.equal(tf.argmax(pred, 1), tf.to_int64(labels_pl))
