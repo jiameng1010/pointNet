@@ -450,7 +450,7 @@ def get_model_rbf_transform(point_cloud, is_training, bn_decay=None):
                                 [1, 1, 3, c1],
                                 initializer=tf.constant_initializer(0.5*np.random.randn(1, 1, 3, c2)),
                                 dtype=tf.float32)
-    net = tf.subtract(tf.tile(tf.expand_dims(net_transformed, 3), [1, 1, 1, c1]), tf.tile(centroids, [batch_size, num_point, 1, 1]))
+    net = tf.subtract(tf.tile(tf.expand_dims(net_transformed, 3), [1, 1, 1, c1]), tf.tile(centroids2, [batch_size, num_point, 1, 1]))
     net = tf.norm(net, axis=2, keep_dims=True)
     net = tf.exp(-net)
     net = tf.concat([net, net], axis=2)
