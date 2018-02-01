@@ -283,7 +283,7 @@ def get_model_rbf3(point_cloud, is_training, bn_decay=None):
                              padding='VALID', scope='maxpool')
     net = tf.expand_dims(tf.squeeze(net), 2)
 
-    features = tf.concat([net, sub_net], axis=2)
+    features = tf.concat([net], axis=2)
 
     # Symmetric function: max pooling
     #features = tf_util.max_pool2d(net, [num_point,1],
