@@ -258,7 +258,7 @@ def get_model_rbf3(point_cloud, is_training, bn_decay=None):
                       tf.tile(tf.expand_dims(centroids, 3), [1, 1, 1, c2, 1]))
     sub_bias = tf.tile(sub_bias, [batch_size, 1024, 1, 1, 1])
     sub_feature = tf.tile(tf.expand_dims(point_cloud_transformed, 4), [1, 1, 1, c2, c1])
-    sub_net = tf.exp(tf.norm(tf.exp(-tf.subtract(sub_feature, sub_bias)), ord=np.inf, axis=2, keep_dims=True))
+    sub_net = tf.exp(-tf.norm(tf.exp(tf.subtract(sub_feature, sub_bias)), ord=np.inf, axis=2, keep_dims=True))
     sub_net = tf.squeeze(sub_net)
     sub_net = tf.transpose(sub_net, perm=[0, 1, 3, 2])
     sub_net = tf_util.max_pool2d(sub_net, [num_point,1], stride=[1, 1],
@@ -277,9 +277,9 @@ def get_model_rbf3(point_cloud, is_training, bn_decay=None):
     feature = tf.tile(point_cloud_transformed, [1, 1, 1, c1])
     bias = tf.tile(centroids, [batch_size, 1024, 1, 1])
     net = tf.subtract(feature, bias)
-    net = tf.exp(-net)
-    net = tf.norm(net, ord=np.inf, axis=2, keep_dims=True)
     net = tf.exp(net)
+    net = tf.norm(net, ord=np.inf, axis=2, keep_dims=True)
+    net = tf.exp(-net)
     net = tf_util.max_pool2d(net, [num_point,1],
                              padding='VALID', scope='maxpool')
     net = tf.expand_dims(tf.squeeze(net), 2)
