@@ -19,7 +19,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--gpu', type=int, default=0, help='GPU to use [default: GPU 0]')
 parser.add_argument('--model', default='pointnet_cls',
                     help='Model name: pointnet_cls or pointnet_cls_basic [default: pointnet_cls]')
-parser.add_argument('--log_dir', default='log/log_rbf25', help='Log dir [default: log]')
+parser.add_argument('--log_dir', default='log/log_rbf26', help='Log dir [default: log]')
 parser.add_argument('--num_point', type=int, default=1024, help='Point Number [256/512/1024/2048] [default: 1024]')
 parser.add_argument('--max_epoch', type=int, default=250, help='Epoch to run [default: 250]')
 parser.add_argument('--batch_size', type=int, default=32, help='Batch Size during training [default: 32]')
