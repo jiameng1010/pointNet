@@ -60,7 +60,7 @@ def get_model_rbf0(point_cloud, is_training, bn_decay=None):
                                   scope='fc3', bn_decay=bn_decay)
     net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
                           scope='dp3')
-    net = tf_util.fully_connected(net, 40, activation_fn=None, scope='fc3')
+    net = tf_util.fully_connected(net, 40, activation_fn=None, scope='fc4')
 
     return net, end_points, features, centroids
 
