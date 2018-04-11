@@ -114,7 +114,7 @@ def provide_data(is_train):
             output_pointcloud[filled, :, :] = h5f['points_on'][0:NUM_POINT, :]
             output_probepoint[filled, :, :] = h5f['points_in_out'][0:NUM_PROBE, :]
             tmp = np.zeros_like(output_label[filled, :])
-            tmp[h5f['in_out_lable'][:]] = 1
+            tmp[h5f['in_out_lable'][:NUM_PROBE]] = 1
             output_label[filled, :] = tmp
 
             filled += 1
@@ -184,6 +184,7 @@ def train():
         sess.run(init, {is_training_pl: True})
 
         ops = {'pointclouds_pl': pointclouds_pl,
+               'probe_points_pl': probe_points_pl,
                'labels_pl': labels_pl,
                'is_training_pl': is_training_pl,
                'pred': pred,
@@ -222,7 +223,8 @@ def train_one_epoch(sess, ops, train_writer):
     for data in train_generator:
         num += 1
         feed_dict = {ops['pointclouds_pl']: data[0],
-                     ops['labels_pl']: data[1],
+                     ops['probe_points_pl']: data[1],
+                     ops['labels_pl']: data[2],
                      ops['is_training_pl']: is_training,}
         summary, step, _, loss, acc, = sess.run([ops['merged'], ops['step'], ops['train_op'], ops['loss'], ops['accuracy']],
                                                 feed_dict = feed_dict)
@@ -246,7 +248,8 @@ def eval_one_epoch(sess, ops, train_writer):
     for data in test_generator:
         num += 1
         feed_dict = {ops['pointclouds_pl']: data[0],
-                     ops['labels_pl']: data[1],
+                     ops['probe_points_pl']: data[1],
+                     ops['labels_pl']: data[2],
                      ops['is_training_pl']: is_training, }
         summary, step, _, loss, acc, = sess.run([ops['merged'], ops['step'], ops['train_op'], ops['loss'], ops['accuracy']],
                                                 feed_dict = feed_dict)
