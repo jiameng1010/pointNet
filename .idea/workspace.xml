@@ -3,6 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="669a4f23-a655-451a-92ce-bd8b33ddf997" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/pointnet_cls.py" afterPath="$PROJECT_DIR$/models/pointnet_cls.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/train_mini_network.py" afterPath="$PROJECT_DIR$/train_mini_network.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -69,7 +70,7 @@
       <file leaf-file-name="train_gan2.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/train_gan2.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1854">
+            <state relative-caret-position="-7586">
               <caret line="103" column="39" lean-forward="false" selection-start-line="103" selection-start-column="39" selection-end-line="103" selection-end-column="39" />
               <folding />
             </state>
@@ -96,11 +97,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="train_mini_network.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="train_mini_network.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/train_mini_network.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="216">
-              <caret line="147" column="55" lean-forward="false" selection-start-line="147" selection-start-column="55" selection-end-line="147" selection-end-column="55" />
+            <state relative-caret-position="396">
+              <caret line="25" column="65" lean-forward="false" selection-start-line="25" selection-start-column="65" selection-end-line="25" selection-end-column="65" />
               <folding>
                 <element signature="e#0#15#0" expanded="true" />
               </folding>
@@ -118,11 +119,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="pointnet_cls.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="pointnet_cls.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/models/pointnet_cls.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-8496">
-              <caret line="18" column="15" lean-forward="false" selection-start-line="18" selection-start-column="15" selection-end-line="18" selection-end-column="15" />
+            <state relative-caret-position="342">
+              <caret line="617" column="34" lean-forward="true" selection-start-line="617" selection-start-column="34" selection-end-line="617" selection-end-column="34" />
               <folding />
             </state>
           </provider>
@@ -185,9 +186,9 @@
         <option value="$PROJECT_DIR$/train.py" />
         <option value="$PROJECT_DIR$/train_org.py" />
         <option value="$PROJECT_DIR$/train_gan3.py" />
-        <option value="$PROJECT_DIR$/models/pointnet_cls.py" />
         <option value="$PROJECT_DIR$/generate_cvs.py" />
         <option value="$PROJECT_DIR$/train_mini_network.py" />
+        <option value="$PROJECT_DIR$/models/pointnet_cls.py" />
       </list>
     </option>
   </component>
@@ -614,13 +615,6 @@
       <option name="presentableId" value="Default" />
       <updated>1512280437230</updated>
     </task>
-    <task id="LOCAL-00180" summary="gan">
-      <created>1515862830423</created>
-      <option name="number" value="00180" />
-      <option name="presentableId" value="LOCAL-00180" />
-      <option name="project" value="LOCAL" />
-      <updated>1515862830423</updated>
-    </task>
     <task id="LOCAL-00181" summary="gan">
       <created>1515862864031</created>
       <option name="number" value="00181" />
@@ -957,7 +951,14 @@
       <option name="project" value="LOCAL" />
       <updated>1523438313784</updated>
     </task>
-    <option name="localTasksCounter" value="229" />
+    <task id="LOCAL-00229" summary="gan">
+      <created>1523439119782</created>
+      <option name="number" value="00229" />
+      <option name="presentableId" value="LOCAL-00229" />
+      <option name="project" value="LOCAL" />
+      <updated>1523439119782</updated>
+    </task>
+    <option name="localTasksCounter" value="230" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1381,22 +1382,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/generate_cvs.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/train_gan2.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1854">
-          <caret line="103" column="39" lean-forward="false" selection-start-line="103" selection-start-column="39" selection-end-line="103" selection-end-column="39" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/provider.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="666">
@@ -1405,21 +1390,37 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/models/pointnet_cls.py">
+    <entry file="file://$PROJECT_DIR$/train_gan2.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-8496">
-          <caret line="18" column="15" lean-forward="false" selection-start-line="18" selection-start-column="15" selection-end-line="18" selection-end-column="15" />
+        <state relative-caret-position="-7586">
+          <caret line="103" column="39" lean-forward="false" selection-start-line="103" selection-start-column="39" selection-end-line="103" selection-end-column="39" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/generate_cvs.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/train_mini_network.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="216">
-          <caret line="147" column="55" lean-forward="false" selection-start-line="147" selection-start-column="55" selection-end-line="147" selection-end-column="55" />
+        <state relative-caret-position="396">
+          <caret line="25" column="65" lean-forward="false" selection-start-line="25" selection-start-column="65" selection-end-line="25" selection-end-column="65" />
           <folding>
             <element signature="e#0#15#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/models/pointnet_cls.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="342">
+          <caret line="617" column="34" lean-forward="true" selection-start-line="617" selection-start-column="34" selection-end-line="617" selection-end-column="34" />
+          <folding />
         </state>
       </provider>
     </entry>
