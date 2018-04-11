@@ -92,11 +92,11 @@ def log_string(out_str):
     print(out_str)
 
 def provide_data(is_train):
-    data_dir = '/media/mjia/Data/ShapeNetCore.v1/03001627/'
+    data_dir = '/media/mjia/Data/ShapeNetCore.v1'
     if is_train:
-        file = open('/media/mjia/Data/ShapeNetCore.v1/03001627train.txt', 'r')
+        file = open(data_dir+'/03001627train.txt', 'r')
     else:
-        file = open('/media/mjia/Data/ShapeNetCore.v1/03001627val.txt', 'r')
+        file = open(data_dir+'/03001627val.txt', 'r')
     lines = file.read().split('\n')
     shuffle(lines)
     file.close()
@@ -107,7 +107,7 @@ def provide_data(is_train):
     filled = 0
     for id in lines:
         try:
-            h5f = h5py.File(data_dir+id+"/model1points.h5", 'r')
+            h5f = h5py.File(data_dir+'/03001627/'+id+"/model1points.h5", 'r')
         except:
             continue
         else:

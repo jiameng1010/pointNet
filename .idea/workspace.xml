@@ -99,8 +99,8 @@
       <file leaf-file-name="train_mini_network.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/train_mini_network.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="468">
-              <caret line="251" column="45" lean-forward="false" selection-start-line="251" selection-start-column="45" selection-end-line="251" selection-end-column="45" />
+            <state relative-caret-position="198">
+              <caret line="98" column="29" lean-forward="false" selection-start-line="98" selection-start-column="29" selection-end-line="98" selection-end-column="29" />
               <folding>
                 <element signature="e#0#15#0" expanded="true" />
               </folding>
@@ -121,7 +121,7 @@
       <file leaf-file-name="pointnet_cls.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/models/pointnet_cls.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="90">
+            <state relative-caret-position="-8496">
               <caret line="18" column="15" lean-forward="false" selection-start-line="18" selection-start-column="15" selection-end-line="18" selection-end-column="15" />
               <folding />
             </state>
@@ -614,13 +614,6 @@
       <option name="presentableId" value="Default" />
       <updated>1512280437230</updated>
     </task>
-    <task id="LOCAL-00178" summary="gan">
-      <created>1515786117726</created>
-      <option name="number" value="00178" />
-      <option name="presentableId" value="LOCAL-00178" />
-      <option name="project" value="LOCAL" />
-      <updated>1515786117726</updated>
-    </task>
     <task id="LOCAL-00179" summary="gan">
       <created>1515812484380</created>
       <option name="number" value="00179" />
@@ -957,7 +950,14 @@
       <option name="project" value="LOCAL" />
       <updated>1523436889990</updated>
     </task>
-    <option name="localTasksCounter" value="227" />
+    <task id="LOCAL-00227" summary="gan">
+      <created>1523437921248</created>
+      <option name="number" value="00227" />
+      <option name="presentableId" value="LOCAL-00227" />
+      <option name="project" value="LOCAL" />
+      <updated>1523437921248</updated>
+    </task>
+    <option name="localTasksCounter" value="228" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1407,7 +1407,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/models/pointnet_cls.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
+        <state relative-caret-position="-8496">
           <caret line="18" column="15" lean-forward="false" selection-start-line="18" selection-start-column="15" selection-end-line="18" selection-end-column="15" />
           <folding />
         </state>
@@ -1415,8 +1415,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/train_mini_network.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="468">
-          <caret line="251" column="45" lean-forward="false" selection-start-line="251" selection-start-column="45" selection-end-line="251" selection-end-column="45" />
+        <state relative-caret-position="198">
+          <caret line="98" column="29" lean-forward="false" selection-start-line="98" selection-start-column="29" selection-end-line="98" selection-end-column="29" />
           <folding>
             <element signature="e#0#15#0" expanded="true" />
           </folding>
