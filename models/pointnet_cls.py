@@ -615,7 +615,6 @@ def field_net(input, net1, net2, net3):
     output = tf.matmul(output, net2)
     output = tf.sigmoid(output)
     output = tf.matmul(output, net3)
-    output = tf.nn.softmax(output)
     return tf.expand_dims(output, axis=0)
 
 def get_loss(pred, label, end_points, reg_weight=0.001):
