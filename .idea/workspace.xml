@@ -99,8 +99,8 @@
       <file leaf-file-name="train_mini_network.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/train_mini_network.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="198">
-              <caret line="98" column="29" lean-forward="false" selection-start-line="98" selection-start-column="29" selection-end-line="98" selection-end-column="29" />
+            <state relative-caret-position="216">
+              <caret line="147" column="55" lean-forward="false" selection-start-line="147" selection-start-column="55" selection-end-line="147" selection-end-column="55" />
               <folding>
                 <element signature="e#0#15#0" expanded="true" />
               </folding>
@@ -614,13 +614,6 @@
       <option name="presentableId" value="Default" />
       <updated>1512280437230</updated>
     </task>
-    <task id="LOCAL-00179" summary="gan">
-      <created>1515812484380</created>
-      <option name="number" value="00179" />
-      <option name="presentableId" value="LOCAL-00179" />
-      <option name="project" value="LOCAL" />
-      <updated>1515812484380</updated>
-    </task>
     <task id="LOCAL-00180" summary="gan">
       <created>1515862830423</created>
       <option name="number" value="00180" />
@@ -957,7 +950,14 @@
       <option name="project" value="LOCAL" />
       <updated>1523437921248</updated>
     </task>
-    <option name="localTasksCounter" value="228" />
+    <task id="LOCAL-00228" summary="gan">
+      <created>1523438313784</created>
+      <option name="number" value="00228" />
+      <option name="presentableId" value="LOCAL-00228" />
+      <option name="project" value="LOCAL" />
+      <updated>1523438313784</updated>
+    </task>
+    <option name="localTasksCounter" value="229" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1415,8 +1415,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/train_mini_network.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="198">
-          <caret line="98" column="29" lean-forward="false" selection-start-line="98" selection-start-column="29" selection-end-line="98" selection-end-column="29" />
+        <state relative-caret-position="216">
+          <caret line="147" column="55" lean-forward="false" selection-start-line="147" selection-start-column="55" selection-end-line="147" selection-end-column="55" />
           <folding>
             <element signature="e#0#15#0" expanded="true" />
           </folding>

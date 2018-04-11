@@ -145,7 +145,7 @@ def train():
             # Get model and loss
             pred, end_points, G_features = MODEL.get_model_field(pointclouds_pl, probe_points_pl, is_training_pl, bn_decay=bn_decay)
             loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=pred, labels=labels_pl)
-            loss = tf.reduce_mean(loss)
+            loss = tf.reduce_mean(tf.reduce_mean(loss))
             tf.summary.scalar('loss', loss)
 
             correct = tf.equal(tf.argmax(pred, 2), tf.to_int64(labels_pl))
