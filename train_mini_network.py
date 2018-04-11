@@ -149,7 +149,7 @@ def train():
             tf.summary.scalar('loss', loss)
 
             correct = tf.equal(tf.argmax(pred, 2), tf.to_int64(labels_pl))
-            accuracy = tf.reduce_sum(tf.cast(correct, tf.float32)) / float(BATCH_SIZE)
+            accuracy = tf.reduce_sum(tf.cast(correct, tf.float32)) / float(BATCH_SIZE) / float(NUM_PROBE)
             tf.summary.scalar('accuracy', accuracy)
 
             # Get training operator
