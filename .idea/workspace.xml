@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="669a4f23-a655-451a-92ce-bd8b33ddf997" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/pointnet_cls.py" afterPath="$PROJECT_DIR$/models/pointnet_cls.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/train_mini_network.py" afterPath="$PROJECT_DIR$/train_mini_network.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -90,8 +89,8 @@
       <file leaf-file-name="train_gan3.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/train_gan3.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="4816">
-              <caret line="636" column="10" lean-forward="false" selection-start-line="636" selection-start-column="10" selection-end-line="636" selection-end-column="10" />
+            <state relative-caret-position="280">
+              <caret line="393" column="112" lean-forward="true" selection-start-line="393" selection-start-column="28" selection-end-line="393" selection-end-column="118" />
               <folding />
             </state>
           </provider>
@@ -100,8 +99,8 @@
       <file leaf-file-name="train_mini_network.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/train_mini_network.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="360">
-              <caret line="146" column="78" lean-forward="true" selection-start-line="146" selection-start-column="78" selection-end-line="146" selection-end-column="78" />
+            <state relative-caret-position="252">
+              <caret line="146" column="95" lean-forward="false" selection-start-line="146" selection-start-column="95" selection-end-line="146" selection-end-column="95" />
               <folding>
                 <element signature="e#0#15#0" expanded="true" />
               </folding>
@@ -615,20 +614,6 @@
       <option name="presentableId" value="Default" />
       <updated>1512280437230</updated>
     </task>
-    <task id="LOCAL-00182" summary="gan">
-      <created>1515891984753</created>
-      <option name="number" value="00182" />
-      <option name="presentableId" value="LOCAL-00182" />
-      <option name="project" value="LOCAL" />
-      <updated>1515891984753</updated>
-    </task>
-    <task id="LOCAL-00183" summary="gan">
-      <created>1515910794201</created>
-      <option name="number" value="00183" />
-      <option name="presentableId" value="LOCAL-00183" />
-      <option name="project" value="LOCAL" />
-      <updated>1515910794201</updated>
-    </task>
     <task id="LOCAL-00184" summary="gan">
       <created>1515910907941</created>
       <option name="number" value="00184" />
@@ -958,7 +943,21 @@
       <option name="project" value="LOCAL" />
       <updated>1523440018772</updated>
     </task>
-    <option name="localTasksCounter" value="231" />
+    <task id="LOCAL-00231" summary="gan">
+      <created>1523440850510</created>
+      <option name="number" value="00231" />
+      <option name="presentableId" value="LOCAL-00231" />
+      <option name="project" value="LOCAL" />
+      <updated>1523440850510</updated>
+    </task>
+    <task id="LOCAL-00232" summary="gan">
+      <created>1523441035290</created>
+      <option name="number" value="00232" />
+      <option name="presentableId" value="LOCAL-00232" />
+      <option name="project" value="LOCAL" />
+      <updated>1523441035290</updated>
+    </task>
+    <option name="localTasksCounter" value="233" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -982,10 +981,10 @@
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3559499" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32890365" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32881" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32881" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24973376" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.29457363" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="FLOATING" visible="true" show_stripe_button="true" weight="0.41971207" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="0" y="417" width="1859" height="547" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.29436326" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="FLOATING" visible="false" show_stripe_button="true" weight="0.41971207" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="0" y="417" width="1859" height="547" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.30235043" sideWeight="0.50644565" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32928848" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
@@ -1382,14 +1381,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/train_gan3.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4816">
-          <caret line="636" column="10" lean-forward="false" selection-start-line="636" selection-start-column="10" selection-end-line="636" selection-end-column="10" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/provider.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-746">
@@ -1424,10 +1415,18 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/train_gan3.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="280">
+          <caret line="393" column="112" lean-forward="true" selection-start-line="393" selection-start-column="28" selection-end-line="393" selection-end-column="118" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/train_mini_network.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="360">
-          <caret line="146" column="78" lean-forward="true" selection-start-line="146" selection-start-column="78" selection-end-line="146" selection-end-column="78" />
+        <state relative-caret-position="252">
+          <caret line="146" column="95" lean-forward="false" selection-start-line="146" selection-start-column="95" selection-end-line="146" selection-end-column="95" />
           <folding>
             <element signature="e#0#15#0" expanded="true" />
           </folding>
