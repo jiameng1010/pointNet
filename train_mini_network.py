@@ -23,7 +23,7 @@ parser.add_argument('--log_dir', default='log/log_field', help='Log dir [default
 parser.add_argument('--num_point', type=int, default=1024, help='Point Number [256/512/1024/2048] [default: 1024]')
 parser.add_argument('--max_epoch', type=int, default=250, help='Epoch to run [default: 250]')
 parser.add_argument('--batch_size', type=int, default=32, help='Batch Size during training [default: 32]')
-parser.add_argument('--learning_rate', type=float, default=0.00001, help='Initial learning rate [default: 0.001]')
+parser.add_argument('--learning_rate', type=float, default=0.001, help='Initial learning rate [default: 0.001]')
 parser.add_argument('--momentum', type=float, default=0.9, help='Initial learning rate [default: 0.9]')
 parser.add_argument('--optimizer', default='adam', help='adam or momentum [default: adam]')
 parser.add_argument('--decay_step', type=int, default=200000, help='Decay step for lr decay [default: 200000]')
@@ -92,7 +92,7 @@ def log_string(out_str):
     print(out_str)
 
 def provide_data(is_train):
-    data_dir = '/media/mjia/Data/ShapeNetCore.v1'
+    data_dir = '/home/tianming/Data/ShapeNetCore.v1'
     if is_train:
         file = open(data_dir+'/03001627train.txt', 'r')
     else:
@@ -103,7 +103,7 @@ def provide_data(is_train):
 
     output_pointcloud = np.zeros(shape=(BATCH_SIZE, NUM_POINT, 3), dtype=np.float32)
     output_probepoint = np.zeros(shape=(BATCH_SIZE, NUM_PROBE, 3), dtype=np.float32)
-    output_label = np.zeros(shape=(BATCH_SIZE, NUM_PROBE), dtype=np.float32)
+    output_label = np.zeros(shape=(BATCH_SIZE, NUM_PROBE), dtype=np.int32)
     filled = 0
     for id in lines:
         try:
@@ -144,11 +144,14 @@ def train():
 
             # Get model and loss
             pred, end_points, G_features = MODEL.get_model_field(pointclouds_pl, probe_points_pl, is_training_pl, bn_decay=bn_decay)
-            loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=pred, labels=labels_pl)
+            #loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=pred, labels=labels_pl)
+            pred = tf.squeeze(pred, axis=2)
+            loss = tf.losses.mean_squared_error(labels=labels_pl, predictions=pred)
             loss = tf.reduce_mean(loss)
             tf.summary.scalar('loss', loss)
 
-            correct = tf.equal(tf.argmax(pred, 2), tf.to_int64(labels_pl))
+            #correct = tf.equal(tf.argmax(pred, 2), tf.to_int64(labels_pl))
+            correct = tf.less(tf.abs(tf.subtract(pred, tf.cast(labels_pl, dtype=tf.float32))), tf.constant(0.5*np.ones(shape=(BATCH_SIZE, NUM_PROBE), dtype=np.float32)))
             accuracy = tf.reduce_sum(tf.cast(correct, tf.float32)) / float(BATCH_SIZE) / float(NUM_PROBE)
             tf.summary.scalar('accuracy', accuracy)
 
@@ -226,7 +229,7 @@ def train_one_epoch(sess, ops, train_writer):
                      ops['probe_points_pl']: data[1],
                      ops['labels_pl']: data[2],
                      ops['is_training_pl']: is_training,}
-        summary, step, _, loss, acc, = sess.run([ops['merged'], ops['step'], ops['train_op'], ops['loss'], ops['accuracy']],
+        summary, step, _, loss, acc, pred, = sess.run([ops['merged'], ops['step'], ops['train_op'], ops['loss'], ops['accuracy'], ops['pred']],
                                                 feed_dict = feed_dict)
 
         acc_sum += acc
@@ -251,7 +254,7 @@ def eval_one_epoch(sess, ops, train_writer):
                      ops['probe_points_pl']: data[1],
                      ops['labels_pl']: data[2],
                      ops['is_training_pl']: is_training, }
-        summary, step, _, loss, acc, = sess.run([ops['merged'], ops['step'], ops['train_op'], ops['loss'], ops['accuracy']],
+        summary, step, _, loss, acc, pred, = sess.run([ops['merged'], ops['step'], ops['train_op'], ops['loss'], ops['accuracy'], ops['pred']],
                                                 feed_dict = feed_dict)
 
         acc_sum += acc
