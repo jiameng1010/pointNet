@@ -14,6 +14,12 @@ def placeholder_inputs(batch_size, num_point):
     labels_pl = tf.placeholder(tf.int32, shape=(batch_size))
     return pointclouds_pl, labels_pl
 
+def placeholder_inputs_field(batch_size, num_point, num_probe):
+    pointclouds_pl = tf.placeholder(tf.float32, shape=(batch_size, num_point, 3))
+    probe_points_pl = tf.placeholder(tf.float32, shape=(batch_size, num_probe, 3))
+    labels_pl = tf.placeholder(tf.int32, shape=(batch_size, num_probe))
+    return pointclouds_pl, probe_points_pl, labels_pl
+
 def get_model_rbf0(point_cloud, is_training, bn_decay=None):
     """ Classification PointNet, input is BxNx3, output Bx40 """
     batch_size = point_cloud.get_shape()[0].value
@@ -532,6 +538,84 @@ def get_model(point_cloud, is_training, bn_decay=None):
 
     return net, end_points, features
 
+
+def get_model_field(point_cloud, probe_points, is_training, bn_decay=None):
+    """ field PointNet, input is BxNx3, output Bx40 """
+    batch_size = point_cloud.get_shape()[0].value
+    num_point = point_cloud.get_shape()[1].value
+    end_points = {}
+
+    with tf.variable_scope('transform_net1', reuse=tf.AUTO_REUSE) as sc:
+        transform = input_transform_net(point_cloud, is_training, bn_decay, K=3)
+    point_cloud_transformed = tf.matmul(point_cloud, transform)
+    input_image = tf.expand_dims(point_cloud_transformed, -1)
+
+    net = tf_util.conv2d(input_image, 64, [1,3],
+                         padding='VALID', stride=[1,1],
+                         bn=True, is_training=is_training,
+                         scope='conv1', bn_decay=bn_decay)
+    net = tf_util.conv2d(net, 64, [1,1],
+                         padding='VALID', stride=[1,1],
+                         bn=True, is_training=is_training,
+                         scope='conv2', bn_decay=bn_decay)
+
+    with tf.variable_scope('transform_net2', reuse=tf.AUTO_REUSE) as sc:
+        transform = feature_transform_net(net, is_training, bn_decay, K=64)
+    end_points['transform'] = transform
+    net_transformed = tf.matmul(tf.squeeze(net, axis=[2]), transform)
+    net_transformed = tf.expand_dims(net_transformed, [2])
+
+    net = tf_util.conv2d(net_transformed, 64, [1,1],
+                         padding='VALID', stride=[1,1],
+                         bn=True, is_training=is_training,
+                         scope='conv3', bn_decay=bn_decay)
+    net = tf_util.conv2d(net, 128, [1,1],
+                         padding='VALID', stride=[1,1],
+                         bn=True, is_training=is_training,
+                         scope='conv4', bn_decay=bn_decay)
+    net = tf_util.conv2d(net, 1024, [1,1],
+                         padding='VALID', stride=[1,1],
+                         bn=True, is_training=is_training,
+                         scope='conv5', bn_decay=bn_decay)
+
+    # Symmetric function: max pooling
+    features = tf_util.max_pool2d(net, [num_point,1],
+                             padding='VALID', scope='maxpool')
+
+    net = tf.reshape(features, [batch_size, -1])
+    net = tf_util.fully_connected(net, 512, bn=True, is_training=is_training,
+                                  scope='fc1', bn_decay=bn_decay)
+    net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
+                          scope='dp1')
+    net = tf_util.fully_connected(net, 256, bn=True, is_training=is_training,
+                                  scope='fc2', bn_decay=bn_decay)
+    net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
+                          scope='dp2')
+    net1 = tf_util.fully_connected(net, 3 * 32, activation_fn=None, scope='fc3')
+    net1 = tf.reshape(net1, [batch_size, 3, 32])
+    net2 = tf_util.fully_connected(net, 32 * 16, activation_fn=None, scope='fc4')
+    net2 = tf.reshape(net2, [batch_size, 32, 16])
+    net3 = tf_util.fully_connected(net, 16 * 2, activation_fn=None, scope='fc5')
+    net3 = tf.reshape(net3, [batch_size, 16, 2])
+
+    p_bs = tf.unstack(probe_points)
+    net1_bs = tf.unstack(net1)
+    net2_bs = tf.unstack(net2)
+    net3_bs = tf.unstack(net3)
+    outputs = []
+    for i in range(batch_size):
+        outputs.append(field_net(p_bs[i], net1_bs[i], net2_bs[i], net3_bs[i]))
+    predictions = tf.concat(outputs, 0)
+
+    return predictions, end_points, features
+
+def field_net(input, net1, net2, net3):
+    output = tf.matmul(input, net1)
+    output = tf.sigmoid(output)
+    output = tf.matmul(output, net2)
+    output = tf.sigmoid(output)
+    output = tf.matmul(output, net3)
+    return tf.expand_dims(output, axis=0)
 
 def get_loss(pred, label, end_points, reg_weight=0.001):
     """ pred: B*NUM_CLASSES,
