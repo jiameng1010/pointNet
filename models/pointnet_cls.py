@@ -539,7 +539,7 @@ def get_model(point_cloud, is_training, bn_decay=None):
     return net, end_points, features
 
 
-def get_model_field(point_cloud, probe_points, is_training, bn_decay=None):
+def get_model_field(point_cloud, probe_points, is_training, net1, bn_decay=None):
     """ field PointNet, input is BxNx3, output Bx40 """
     batch_size = point_cloud.get_shape()[0].value
     num_point = point_cloud.get_shape()[1].value
@@ -587,40 +587,31 @@ def get_model_field(point_cloud, probe_points, is_training, bn_decay=None):
                                   scope='fc1', bn_decay=bn_decay)
     net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
                           scope='dp1')
-    net = tf_util.fully_connected(net, 256, bn=True, is_training=is_training,
+    net = tf_util.fully_connected(net, 1024, bn=True, is_training=is_training,
                                   scope='fc2', bn_decay=bn_decay)
     net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training,
                           scope='dp2')
-    net10 = tf_util.fully_connected(net, 3 * 32, activation_fn=None, scope='fc3')
-    net1 = tf.reshape(net10, [batch_size, 3, 32])
-    net20 = tf_util.fully_connected(tf.concat([net, net10], axis=1), 32 * 64, activation_fn=None, scope='fc4')
-    net2 = tf.reshape(net20, [batch_size, 32, 64])
-    net30 = tf_util.fully_connected(tf.concat([net, net20], axis=1), 64 * 32, activation_fn=None, scope='fc5')
-    net3 = tf.reshape(net30, [batch_size, 64, 32])
-    net40 = tf_util.fully_connected(tf.concat([net, net30], axis=1), 32 * 1, activation_fn=None, scope='fc6')
-    net4 = tf.reshape(net40, [batch_size, 32, 1])
+    #net10 = tf_util.fully_connected(net, 3 * 2048, activation_fn=None, scope='fc3')
+    #net1 = tf.reshape(net10, [batch_size, 3, 2048])
+    #net1 = tf.constant(np.random.normal(size=(batch_size, 3, 4096)), dtype=tf.float32)
+    net20 = tf_util.fully_connected(tf.concat(net, axis=1), 4096 * 2, activation_fn=None, scope='fc6')
+    net2 = tf.reshape(net20, [batch_size, 4096, 2])
 
     p_bs = tf.unstack(probe_points)
     net1_bs = tf.unstack(net1)
     net2_bs = tf.unstack(net2)
-    net3_bs = tf.unstack(net3)
-    net4_bs = tf.unstack(net4)
     outputs = []
     for i in range(batch_size):
-        outputs.append(field_net(p_bs[i], net1_bs[i], net2_bs[i], net3_bs[i], net4_bs[i]))
+        outputs.append(field_net(p_bs[i], net1_bs[i], net2_bs[i]))
     predictions = tf.concat(outputs, 0)
 
     return predictions, end_points, features
 
-def field_net(input, net1, net2, net3, net4):
+def field_net(input, net1, net2):
     output = tf.matmul(input, net1)
     output = tf.nn.leaky_relu(output, alpha=0.1)
     output = tf.matmul(output, net2)
-    output = tf.nn.leaky_relu(output, alpha=0.1)
-    output = tf.matmul(output, net3)
-    output = tf.nn.leaky_relu(output, alpha=0.1)
-    output = tf.matmul(output, net4)
-    output = tf.sigmoid(output)
+    #output = tf.sigmoid(output)
     return tf.expand_dims(output, axis=0)
 
 def get_loss(pred, label, end_points, reg_weight=0.001):

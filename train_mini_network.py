@@ -23,7 +23,7 @@ parser.add_argument('--log_dir', default='log/log_field', help='Log dir [default
 parser.add_argument('--num_point', type=int, default=1024, help='Point Number [256/512/1024/2048] [default: 1024]')
 parser.add_argument('--max_epoch', type=int, default=250, help='Epoch to run [default: 250]')
 parser.add_argument('--batch_size', type=int, default=32, help='Batch Size during training [default: 32]')
-parser.add_argument('--learning_rate', type=float, default=0.001, help='Initial learning rate [default: 0.001]')
+parser.add_argument('--learning_rate', type=float, default=0.01, help='Initial learning rate [default: 0.001]')
 parser.add_argument('--momentum', type=float, default=0.9, help='Initial learning rate [default: 0.9]')
 parser.add_argument('--optimizer', default='adam', help='adam or momentum [default: adam]')
 parser.add_argument('--decay_step', type=int, default=200000, help='Decay step for lr decay [default: 200000]')
@@ -92,7 +92,7 @@ def log_string(out_str):
     print(out_str)
 
 def provide_data(is_train):
-    data_dir = '/home/tianming/Data/ShapeNetCore.v1'
+    data_dir = '/media/mjia/Data/ShapeNetCore.v1'
     if is_train:
         file = open(data_dir+'/03001627train.txt', 'r')
     else:
@@ -144,15 +144,16 @@ def train():
             tf.summary.scalar('bn_decay', bn_decay)
 
             # Get model and loss
-            pred, end_points, G_features = MODEL.get_model_field(pointclouds_pl, probe_points_pl, is_training_pl, bn_decay=bn_decay)
-            #loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=pred, labels=labels_pl)
-            pred = tf.squeeze(pred, axis=2)
-            loss = tf.losses.mean_squared_error(labels=labels_pl, predictions=pred)
-            loss = tf.reduce_mean(loss)
+            net1 = tf.constant(np.random.normal(size=(BATCH_SIZE, 3, 4096)), dtype=tf.float32)
+            pred, end_points, G_features = MODEL.get_model_field(pointclouds_pl, probe_points_pl, is_training_pl, net1, bn_decay=bn_decay)
+            loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=pred, labels=labels_pl)
+            #pred = tf.squeeze(pred, axis=2)
+            #loss = tf.losses.mean_squared_error(labels=labels_pl, predictions=pred)
+            loss = tf.reduce_mean(loss)# - 0.06*tf.reduce_mean(pred)
             tf.summary.scalar('loss', loss)
 
-            #correct = tf.equal(tf.argmax(pred, 2), tf.to_int64(labels_pl))
-            correct = tf.less(tf.abs(tf.subtract(pred, tf.cast(labels_pl, dtype=tf.float32))), tf.constant(0.5*np.ones(shape=(BATCH_SIZE, NUM_PROBE), dtype=np.float32)))
+            correct = tf.equal(tf.argmax(pred, 2), tf.to_int64(labels_pl))
+            #correct = tf.less(tf.abs(tf.subtract(pred, tf.cast(labels_pl, dtype=tf.float32))), tf.constant(0.5*np.ones(shape=(BATCH_SIZE, NUM_PROBE), dtype=np.float32)))
             accuracy = tf.reduce_sum(tf.cast(correct, tf.float32)) / float(BATCH_SIZE) / float(NUM_PROBE)
             tf.summary.scalar('accuracy', accuracy)
 
@@ -261,6 +262,8 @@ def eval_one_epoch(sess, ops, train_writer):
         acc_sum += acc
         loss_sum += loss
         train_writer.add_summary(summary, step)
+        if num == 1:
+            print(np.mean(np.mean(np.argmax(pred, axis=2))))
 
     log_string('eval loss: %f' % loss_sum)
     log_string('eval accuracy: %f' % (acc_sum / num))
