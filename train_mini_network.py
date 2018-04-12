@@ -118,6 +118,7 @@ def provide_data(is_train):
             output_label[filled, :] = tmp
 
             filled += 1
+            h5f.close()
             if filled == BATCH_SIZE:
                 filled = 0
                 yield output_pointcloud, output_probepoint, output_label
