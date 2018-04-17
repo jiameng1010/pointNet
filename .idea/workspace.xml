@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="669a4f23-a655-451a-92ce-bd8b33ddf997" name="Default" comment="gan">
+    <list default="true" id="669a4f23-a655-451a-92ce-bd8b33ddf997" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/train_mini_network.py" afterPath="$PROJECT_DIR$/train_mini_network.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -604,13 +603,6 @@
       <option name="presentableId" value="Default" />
       <updated>1512280437230</updated>
     </task>
-    <task id="LOCAL-00190" summary="gan">
-      <created>1515943508350</created>
-      <option name="number" value="00190" />
-      <option name="presentableId" value="LOCAL-00190" />
-      <option name="project" value="LOCAL" />
-      <updated>1515943508350</updated>
-    </task>
     <task id="LOCAL-00191" summary="gan">
       <created>1515944808792</created>
       <option name="number" value="00191" />
@@ -947,7 +939,14 @@
       <option name="project" value="LOCAL" />
       <updated>1523995453789</updated>
     </task>
-    <option name="localTasksCounter" value="239" />
+    <task id="LOCAL-00239" summary="gan">
+      <created>1523996706153</created>
+      <option name="number" value="00239" />
+      <option name="presentableId" value="LOCAL-00239" />
+      <option name="project" value="LOCAL" />
+      <updated>1523996706153</updated>
+    </task>
+    <option name="localTasksCounter" value="240" />
     <servers />
   </component>
   <component name="TestHistory">
