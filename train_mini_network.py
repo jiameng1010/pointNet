@@ -22,8 +22,8 @@ parser.add_argument('--model', default='pointnet_cls', help='Model name: pointne
 parser.add_argument('--log_dir', default='log/log_field', help='Log dir [default: log]')
 parser.add_argument('--num_point', type=int, default=1024, help='Point Number [256/512/1024/2048] [default: 1024]')
 parser.add_argument('--max_epoch', type=int, default=250, help='Epoch to run [default: 250]')
-parser.add_argument('--batch_size', type=int, default=32, help='Batch Size during training [default: 32]')
-parser.add_argument('--learning_rate', type=float, default=0.01, help='Initial learning rate [default: 0.001]')
+parser.add_argument('--batch_size', type=int, default=28, help='Batch Size during training [default: 32]')
+parser.add_argument('--learning_rate', type=float, default=0.0001, help='Initial learning rate [default: 0.001]')
 parser.add_argument('--momentum', type=float, default=0.9, help='Initial learning rate [default: 0.9]')
 parser.add_argument('--optimizer', default='adam', help='adam or momentum [default: adam]')
 parser.add_argument('--decay_step', type=int, default=200000, help='Decay step for lr decay [default: 200000]')
@@ -59,6 +59,7 @@ BN_DECAY_DECAY_STEP = float(DECAY_STEP)
 BN_DECAY_CLIP = 0.99
 
 HOSTNAME = socket.gethostname()
+data_dir = '/media/mjia/Data/ShapeNetCore.v1'
 
 # ModelNet40 official train/test split
 #TRAIN_FILES = provider.getDataFiles( \
@@ -92,7 +93,6 @@ def log_string(out_str):
     print(out_str)
 
 def provide_data(is_train):
-    data_dir = '/media/mjia/Data/ShapeNetCore.v1'
     if is_train:
         file = open(data_dir+'/03001627train.txt', 'r')
     else:
@@ -104,24 +104,29 @@ def provide_data(is_train):
     output_pointcloud = np.zeros(shape=(BATCH_SIZE, NUM_POINT, 3), dtype=np.float32)
     output_probepoint = np.zeros(shape=(BATCH_SIZE, NUM_PROBE, 3), dtype=np.float32)
     output_label = np.zeros(shape=(BATCH_SIZE, NUM_PROBE), dtype=np.int32)
+    output_weight = np.zeros(shape=(BATCH_SIZE, 1024), dtype=np.float32)
     filled = 0
     for id in lines:
         try:
             h5f = h5py.File(data_dir+'/03001627/'+id+"/model1points.h5", 'r')
+            h5f2 = h5py.File(data_dir+'/03001627/'+id+"/model1pointsweight.h5", 'r')
         except:
             continue
         else:
             output_pointcloud[filled, :, :] = h5f['points_on'][0:NUM_POINT, :]
             output_probepoint[filled, :, :] = h5f['points_in_out'][0:NUM_PROBE, :]
-            tmp = np.zeros_like(output_label[filled, :])
-            tmp[h5f['in_out_lable'][:NUM_PROBE]] = 1
-            output_label[filled, :] = tmp
+            output_weight[filled, :, :] = h5f2['weight'][:]
+            #tmp = np.zeros_like(output_label[filled, :])
+            #tmp[h5f['in_out_lable'][:NUM_PROBE]] = 1
+            tmp = np.less(output_probepoint[filled, :, 0], np.zeros_like(output_probepoint[filled, :, 0]))
+            output_label[filled, :] = tmp.astype(int)
 
             filled += 1
             h5f.close()
+            h5f2.close()
             if filled == BATCH_SIZE:
                 filled = 0
-                yield output_pointcloud, output_probepoint, output_label
+                yield output_pointcloud, output_probepoint, output_label, output_weight
 
 
 
@@ -133,7 +138,7 @@ def provide_data(is_train):
 def train():
     with tf.Graph().as_default():
         with tf.device('/gpu:'+str(GPU_INDEX)):
-            pointclouds_pl, probe_points_pl, labels_pl = MODEL.placeholder_inputs_field(BATCH_SIZE, NUM_POINT, NUM_PROBE)
+            pointclouds_pl, probe_points_pl, labels_pl, elm_weight = MODEL.placeholder_inputs_field(BATCH_SIZE, NUM_POINT, NUM_PROBE)
             is_training_pl = tf.placeholder(tf.bool, shape=())
             print(is_training_pl)
 
@@ -144,16 +149,21 @@ def train():
             tf.summary.scalar('bn_decay', bn_decay)
 
             # Get model and loss
-            net1 = tf.constant(np.random.normal(size=(BATCH_SIZE, 3, 4096)), dtype=tf.float32)
-            pred, end_points, G_features = MODEL.get_model_field(pointclouds_pl, probe_points_pl, is_training_pl, net1, bn_decay=bn_decay)
-            loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=pred, labels=labels_pl)
-            #pred = tf.squeeze(pred, axis=2)
-            #loss = tf.losses.mean_squared_error(labels=labels_pl, predictions=pred)
-            loss = tf.reduce_mean(loss)# - 0.06*tf.reduce_mean(pred)
+            h5f = h5py.File(data_dir + "/03001627/random_weight.h5", 'r')
+            random_weights = h5f['randomweight'][:]
+            h5f.close()
+            net1 = tf.constant(random_weights, dtype=tf.float32)
+            #net1 = tf.constant(np.random.normal(size=(3, 3072)), dtype=tf.float32)
+            pred, end_points, G_features, pred_elm_weight = MODEL.get_model_field(pointclouds_pl, probe_points_pl, is_training_pl, net1, bn_decay=bn_decay)
+            #loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=pred, labels=labels_pl)
+            pred = tf.squeeze(pred, axis=2)
+            loss1 = tf.losses.mean_squared_error(labels=labels_pl, predictions=pred)
+            loss2 = tf.losses.mean_squared_error(labels=elm_weight, predictions=pred_elm_weight)
+            loss = tf.reduce_mean(loss1) + tf.reduce_mean(loss2)# - 0.06*tf.reduce_mean(pred)
             tf.summary.scalar('loss', loss)
 
-            correct = tf.equal(tf.argmax(pred, 2), tf.to_int64(labels_pl))
-            #correct = tf.less(tf.abs(tf.subtract(pred, tf.cast(labels_pl, dtype=tf.float32))), tf.constant(0.5*np.ones(shape=(BATCH_SIZE, NUM_PROBE), dtype=np.float32)))
+            #correct = tf.equal(tf.argmax(pred, 2), tf.to_int64(labels_pl))
+            correct = tf.equal(tf.cast(tf.less(pred, tf.constant(0.5*np.ones(shape=(BATCH_SIZE, NUM_PROBE)), dtype=np.float32)), tf.int32), labels_pl)
             accuracy = tf.reduce_sum(tf.cast(correct, tf.float32)) / float(BATCH_SIZE) / float(NUM_PROBE)
             tf.summary.scalar('accuracy', accuracy)
 

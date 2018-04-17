@@ -18,7 +18,8 @@ def placeholder_inputs_field(batch_size, num_point, num_probe):
     pointclouds_pl = tf.placeholder(tf.float32, shape=(batch_size, num_point, 3))
     probe_points_pl = tf.placeholder(tf.float32, shape=(batch_size, num_probe, 3))
     labels_pl = tf.placeholder(tf.int32, shape=(batch_size, num_probe))
-    return pointclouds_pl, probe_points_pl, labels_pl
+    elm_weight = tf.placeholder(tf.float32, shape=(batch_size, 1024))
+    return pointclouds_pl, probe_points_pl, labels_pl, elm_weight
 
 def get_model_rbf0(point_cloud, is_training, bn_decay=None):
     """ Classification PointNet, input is BxNx3, output Bx40 """
@@ -594,23 +595,29 @@ def get_model_field(point_cloud, probe_points, is_training, net1, bn_decay=None)
     #net10 = tf_util.fully_connected(net, 3 * 2048, activation_fn=None, scope='fc3')
     #net1 = tf.reshape(net10, [batch_size, 3, 2048])
     #net1 = tf.constant(np.random.normal(size=(batch_size, 3, 4096)), dtype=tf.float32)
-    net20 = tf_util.fully_connected(tf.concat(net, axis=1), 4096 * 2, activation_fn=None, scope='fc6')
-    net2 = tf.reshape(net20, [batch_size, 4096, 2])
+    net20 = tf_util.fully_connected(tf.concat(net, axis=1), 1024 * 1, activation_fn=None, scope='fc6')
+    net2 = tf.reshape(net20, [batch_size, 1024, 1])
 
+    probe_points = tf.concat([probe_points, tf.ones([batch_size, 2048, 1])], axis=2)
     p_bs = tf.unstack(probe_points)
-    net1_bs = tf.unstack(net1)
+    net1_bs = net1
     net2_bs = tf.unstack(net2)
     outputs = []
     for i in range(batch_size):
-        outputs.append(field_net(p_bs[i], net1_bs[i], net2_bs[i]))
+        outputs.append(field_net(p_bs[i], net1_bs, net2_bs[i]))
     predictions = tf.concat(outputs, 0)
 
-    return predictions, end_points, features
+    return predictions, end_points, features, net20
 
 def field_net(input, net1, net2):
     output = tf.matmul(input, net1)
-    output = tf.nn.leaky_relu(output, alpha=0.1)
+    output = tf.nn.sigmoid(output)
     output = tf.matmul(output, net2)
+    #output_ch = tf.unstack(output, axis=1)
+    #output_ch[0] = tf.expand_dims(tf.add(output_ch[0], tf.subtract(tf.reduce_mean(output_ch[1]), tf.reduce_mean(output_ch[0])) * tf.constant(np.ones((2048), dtype='float32'))), axis=1)
+    #output_ch[1] = tf.expand_dims(output_ch[1], axis=1)
+    #output = tf.concat(output_ch, axis=1)
+
     #output = tf.sigmoid(output)
     return tf.expand_dims(output, axis=0)
 
