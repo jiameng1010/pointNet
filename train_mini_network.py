@@ -159,7 +159,7 @@ def train():
             pred = tf.squeeze(pred, axis=2)
             loss1 = tf.losses.mean_squared_error(labels=labels_pl, predictions=pred)
             loss2 = tf.losses.mean_squared_error(labels=elm_weight, predictions=pred_elm_weight)
-            loss = tf.reduce_mean(loss1) + tf.reduce_mean(loss2)# - 0.06*tf.reduce_mean(pred)
+            loss = tf.reduce_mean(loss1) + 0.00001*tf.reduce_mean(loss2)# - 0.06*tf.reduce_mean(pred)
             tf.summary.scalar('loss', loss)
 
             #correct = tf.equal(tf.argmax(pred, 2), tf.to_int64(labels_pl))
@@ -275,8 +275,8 @@ def eval_one_epoch(sess, ops, train_writer):
         acc_sum += acc
         loss_sum += loss
         train_writer.add_summary(summary, step)
-        if num == 1:
-            print(np.mean(np.mean(np.argmax(pred, axis=2))))
+        #if num == 1:
+        #    print(np.mean(np.mean(np.argmax(pred, axis=2))))
 
     log_string('eval loss: %f' % loss_sum)
     log_string('eval accuracy: %f' % (acc_sum / num))
