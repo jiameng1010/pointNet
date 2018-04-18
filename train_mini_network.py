@@ -23,7 +23,7 @@ parser.add_argument('--log_dir', default='log/log_field', help='Log dir [default
 parser.add_argument('--num_point', type=int, default=1024, help='Point Number [256/512/1024/2048] [default: 1024]')
 parser.add_argument('--max_epoch', type=int, default=250, help='Epoch to run [default: 250]')
 parser.add_argument('--batch_size', type=int, default=28, help='Batch Size during training [default: 32]')
-parser.add_argument('--learning_rate', type=float, default=0.0001, help='Initial learning rate [default: 0.001]')
+parser.add_argument('--learning_rate', type=float, default=0.00001, help='Initial learning rate [default: 0.001]')
 parser.add_argument('--momentum', type=float, default=0.9, help='Initial learning rate [default: 0.9]')
 parser.add_argument('--optimizer', default='adam', help='adam or momentum [default: adam]')
 parser.add_argument('--decay_step', type=int, default=200000, help='Decay step for lr decay [default: 200000]')
@@ -59,7 +59,9 @@ BN_DECAY_DECAY_STEP = float(DECAY_STEP)
 BN_DECAY_CLIP = 0.99
 
 HOSTNAME = socket.gethostname()
-data_dir = '/media/mjia/Data/ShapeNetCore.v1'
+d_dir = open(os.getenv("HOME")+'/Data_dir', 'r')
+data_dir = d_dir.read()[:-1]
+d_dir.close()
 
 # ModelNet40 official train/test split
 #TRAIN_FILES = provider.getDataFiles( \
@@ -159,7 +161,7 @@ def train():
             pred = tf.squeeze(pred, axis=2)
             loss1 = tf.losses.mean_squared_error(labels=labels_pl, predictions=pred)
             loss2 = tf.losses.mean_squared_error(labels=elm_weight, predictions=pred_elm_weight)
-            loss = tf.reduce_mean(loss1) + 0.00001*tf.reduce_mean(loss2)# - 0.06*tf.reduce_mean(pred)
+            loss = tf.reduce_mean(loss1) + 1e-13 * tf.reduce_mean(loss2)# - 0.06*tf.reduce_mean(pred)
             tf.summary.scalar('loss', loss)
 
             #correct = tf.equal(tf.argmax(pred, 2), tf.to_int64(labels_pl))
@@ -210,22 +212,22 @@ def train():
                'step': batch,
                'accuracy': accuracy}
 
-        # builder = tf.saved_model.builder.SavedModelBuilder(LOG_DIR + '/model_elm')
-        # builder.add_meta_graph_and_variables(sess, 'feature_net')
+        builder = tf.saved_model.builder.SavedModelBuilder(LOG_DIR + '/model_elm')
+        builder.add_meta_graph_and_variables(sess, 'feature_net')
 
         for epoch in range(MAX_EPOCH):
             log_string('**** EPOCH %03d ****' % (epoch))
             sys.stdout.flush()
 
             train_one_epoch(sess, ops, train_writer)
-            eval_one_epoch(sess, ops, test_writer)
+            eval_accu = eval_one_epoch(sess, ops, test_writer)
 
             # Save the variables to disk.
             if epoch % 10 == 0:
                 save_path = saver.save(sess, os.path.join(LOG_DIR, "model.ckpt"))
                 log_string("Model saved in file: %s" % save_path)
-                # if epoch == 50:
-                #    builder.save()
+            if eval_accu > 0.98:
+                builder.save()
 
 
 
@@ -280,7 +282,7 @@ def eval_one_epoch(sess, ops, train_writer):
 
     log_string('eval loss: %f' % loss_sum)
     log_string('eval accuracy: %f' % (acc_sum / num))
-
+    return acc_sum / num
 
 
 
