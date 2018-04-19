@@ -132,12 +132,13 @@ def provide_data(is_train):
         except:
             continue
         else:
-            output_pointcloud[filled, :, :] = half(h5f['points_on'][:])
+            #output_pointcloud[filled, :, :] = half(h5f['points_on'][:])
+            output_pointcloud[filled, :, :] = h5f['points_on'][0:NUM_POINT, :]
             output_probepoint[filled, :, :] = h5f['points_in_out'][0:NUM_PROBE, :]
             output_weight[filled, :] = h5f2['weight'][:]
-            #tmp = np.zeros_like(output_label[filled, :])
-            #tmp[h5f['in_out_lable'][:NUM_PROBE]] = 1
-            tmp = np.less(output_probepoint[filled, :, 0], np.zeros_like(output_probepoint[filled, :, 0]))
+            tmp = np.zeros_like(output_label[filled, :])
+            tmp[h5f['in_out_lable'][:NUM_PROBE]] = 1
+            #tmp = np.less(output_probepoint[filled, :, 0], np.zeros_like(output_probepoint[filled, :, 0]))
             output_label[filled, :] = tmp.astype(int)
 
             filled += 1
