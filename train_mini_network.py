@@ -275,7 +275,7 @@ def train_one_epoch(sess, ops, train_writer):
         loss_sum += loss
         train_writer.add_summary(summary, step)
 
-    log_string('train loss: %f' % loss_sum/num)
+    log_string('train loss: %f' % (loss_sum/num))
     log_string('loss_rate: %f' % (loss_rate_sum/num))
     log_string('accuracy: %f' % (acc_sum/num))
 
@@ -317,7 +317,7 @@ def eval_one_epoch(sess, ops, train_writer):
             h5f.create_dataset('points_pred', pred)
             h5f.close()
 
-    log_string('eval loss: %f' % loss_sum/num)
+    log_string('eval loss: %f' % (loss_sum/num))
     log_string('loss_rate: %f' % (loss_rate_sum/num))
     log_string('eval accuracy: %f' % (acc_sum / num))
 
