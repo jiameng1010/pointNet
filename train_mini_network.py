@@ -224,7 +224,7 @@ def train():
                'step': batch,
                'accuracy': accuracy}
 
-        builder = tf.saved_model.builder.SavedModelBuilder(LOG_DIR + '/model_elm')
+        builder = tf.saved_model.builder.SavedModelBuilder(LOG_DIR + '/model_elm_incomplete')
         builder.add_meta_graph_and_variables(sess, 'feature_net')
 
         for epoch in range(MAX_EPOCH):
