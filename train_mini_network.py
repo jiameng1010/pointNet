@@ -104,6 +104,7 @@ def half(shape):
     ind = 0
     for i in index:
         output[ind, : ] = shape[i, :]
+        ind += 1
     return output
 
 
