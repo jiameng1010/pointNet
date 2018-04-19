@@ -106,6 +106,8 @@ def half(shape):
     for i in index:
         output[ind, : ] = shape[i, :]
         ind += 1
+        if ind == 1023:
+            break
     return output
 
 
