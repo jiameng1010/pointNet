@@ -95,6 +95,7 @@ def log_string(out_str):
     LOG_FOUT.flush()
     print(out_str)
 
+
 def half(shape):
     norm = np.random.rand(3, 1) - 0.5*np.ones(shape=(3, 1))
     norm = norm/abs(norm)
