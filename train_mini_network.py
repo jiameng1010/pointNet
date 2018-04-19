@@ -311,10 +311,10 @@ def eval_one_epoch(sess, ops, train_writer):
         if np.random.rand(1) < 0.01:
             #    print(np.mean(np.mean(np.argmax(pred, axis=2))))
             h5f = h5py.File(os.path.join(LOG_DIR, "Demo.h5"), 'w')
-            h5f.create_dataset('points_on', data[0])
-            h5f.create_dataset('points_in_out', data[1])
-            h5f.create_dataset('points_label', data[2])
-            h5f.create_dataset('points_pred', pred)
+            h5f.create_dataset('points_on', data=data[0])
+            h5f.create_dataset('points_in_out', data=data[1])
+            h5f.create_dataset('points_label', data=data[2])
+            h5f.create_dataset('points_pred', data=pred)
             h5f.close()
 
     log_string('eval loss: %f' % (loss_sum/num))
