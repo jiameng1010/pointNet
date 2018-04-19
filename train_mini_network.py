@@ -62,6 +62,7 @@ HOSTNAME = socket.gethostname()
 d_dir = open(os.getenv("HOME")+'/Data_dir', 'r')
 data_dir = d_dir.read()[:-1]
 d_dir.close()
+num_demo = 0
 
 # ModelNet40 official train/test split
 #TRAIN_FILES = provider.getDataFiles( \
@@ -171,13 +172,15 @@ def train():
             pred, end_points, G_features, pred_elm_weight = MODEL.get_model_field(pointclouds_pl, probe_points_pl, is_training_pl, net1, bn_decay=bn_decay)
             #loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=pred, labels=labels_pl)
             pred = tf.squeeze(pred, axis=2)
-            loss1 = tf.losses.mean_squared_error(labels=labels_pl, predictions=pred)
-            loss2 = tf.losses.mean_squared_error(labels=elm_weight, predictions=pred_elm_weight)
-            loss = tf.reduce_mean(loss1) + 1e-13 * tf.reduce_mean(loss2)# - 0.06*tf.reduce_mean(pred)
+            loss1 = tf.reduce_mean(tf.losses.mean_squared_error(labels=labels_pl, predictions=pred))
+            loss2 = tf.reduce_mean(tf.losses.mean_squared_error(labels=elm_weight, predictions=pred_elm_weight))
+            rate = 1e-13
+            loss = loss1 + rate * loss2# - 0.06*tf.reduce_mean(pred)
             tf.summary.scalar('loss', loss)
+            loss_rate = tf.divide(loss1, rate * loss2)
 
             #correct = tf.equal(tf.argmax(pred, 2), tf.to_int64(labels_pl))
-            correct = tf.equal(tf.cast(tf.less(pred, tf.constant(0.5*np.ones(shape=(BATCH_SIZE, NUM_PROBE)), dtype=np.float32)), tf.int32), labels_pl)
+            correct = tf.equal(tf.cast(tf.greater(pred, tf.constant(0.5*np.ones(shape=(BATCH_SIZE, NUM_PROBE)), dtype=np.float32)), tf.int32), labels_pl)
             accuracy = tf.reduce_sum(tf.cast(correct, tf.float32)) / float(BATCH_SIZE) / float(NUM_PROBE)
             tf.summary.scalar('accuracy', accuracy)
 
@@ -222,7 +225,8 @@ def train():
                'train_op': train_op,
                'merged': merged,
                'step': batch,
-               'accuracy': accuracy}
+               'accuracy': accuracy,
+               'loss_rate': loss_rate}
 
         builder = tf.saved_model.builder.SavedModelBuilder(LOG_DIR + '/model_elm_incomplete')
         builder.add_meta_graph_and_variables(sess, 'feature_net')
@@ -245,10 +249,11 @@ def train():
 
 def train_one_epoch(sess, ops, train_writer):
     is_training = True
-    log_string('train_one_epoch')
+    log_string('train_one_epoch*****************************************')
     train_generator = provide_data(is_training)
     loss_sum = 0
     acc_sum = 0
+    loss_rate_sum = 0
     num = 0
     for data in train_generator:
         num += 1
@@ -257,14 +262,21 @@ def train_one_epoch(sess, ops, train_writer):
                      ops['labels_pl']: data[2],
                      ops['elm_weight_pl']: data[3],
                      ops['is_training_pl']: is_training,}
-        summary, step, _, loss, acc, pred, = sess.run([ops['merged'], ops['step'], ops['train_op'], ops['loss'], ops['accuracy'], ops['pred']],
-                                                feed_dict = feed_dict)
-
+        summary, step, _, loss, acc, pred, loss_rate = sess.run([ops['merged'],
+                                                                 ops['step'],
+                                                                 ops['train_op'],
+                                                                 ops['loss'],
+                                                                 ops['accuracy'],
+                                                                 ops['pred'],
+                                                                 ops['loss_rate']],
+                                                                feed_dict = feed_dict)
+        loss_rate_sum += loss_rate
         acc_sum += acc
         loss_sum += loss
         train_writer.add_summary(summary, step)
 
-    log_string('train loss: %f' % loss_sum)
+    log_string('train loss: %f' % loss_sum/num)
+    log_string('loss_rate: %f' % (loss_rate_sum/num))
     log_string('accuracy: %f' % (acc_sum/num))
 
 
@@ -275,6 +287,7 @@ def eval_one_epoch(sess, ops, train_writer):
     test_generator = provide_data(is_training)
     loss_sum = 0
     acc_sum = 0
+    loss_rate_sum = 0
     num = 0
     for data in test_generator:
         num += 1
@@ -283,17 +296,31 @@ def eval_one_epoch(sess, ops, train_writer):
                      ops['labels_pl']: data[2],
                      ops['elm_weight_pl']: data[3],
                      ops['is_training_pl']: is_training, }
-        summary, step, _, loss, acc, pred, = sess.run([ops['merged'], ops['step'], ops['train_op'], ops['loss'], ops['accuracy'], ops['pred']],
-                                                feed_dict = feed_dict)
-
+        summary, step, _, loss, acc, pred, loss_rate = sess.run([ops['merged'],
+                                                                 ops['step'],
+                                                                 ops['train_op'],
+                                                                 ops['loss'],
+                                                                 ops['accuracy'],
+                                                                 ops['pred'],
+                                                                 ops['loss_rate']],
+                                                                feed_dict = feed_dict)
+        loss_rate_sum += loss_rate
         acc_sum += acc
         loss_sum += loss
         train_writer.add_summary(summary, step)
-        #if num == 1:
-        #    print(np.mean(np.mean(np.argmax(pred, axis=2))))
+        if np.random.rand(1) < 0.001:
+            #    print(np.mean(np.mean(np.argmax(pred, axis=2))))
+            h5f = h5py.File(os.path.join(LOG_DIR, "Demo.h5"), 'w')
+            h5f.create_dataset('points_on', data[0])
+            h5f.create_dataset('points_in_out', data[1])
+            h5f.create_dataset('points_label', data[2])
+            h5f.create_dataset('points_pred', pred)
+            h5f.close()
 
-    log_string('eval loss: %f' % loss_sum)
+    log_string('eval loss: %f' % loss_sum/num)
+    log_string('loss_rate: %f' % (loss_rate_sum/num))
     log_string('eval accuracy: %f' % (acc_sum / num))
+
     return acc_sum / num
 
 
