@@ -94,6 +94,18 @@ def log_string(out_str):
     LOG_FOUT.flush()
     print(out_str)
 
+def half(shape):
+    norm = np.random.rand(3, 1) - 0.5*np.ones(shape=(3, 1))
+    norm = norm/abs(norm)
+    shape_distance = np.matmul(shape, norm)
+    index = np.argsort(shape_distance, axis=0)
+    output = np.empty(shape=(1024, 3), dtype=np.float32)
+    ind = 0
+    for i in index:
+        output[ind, : ] = shape[i, :]
+    return output
+
+
 def provide_data(is_train):
     if is_train:
         file = open(data_dir+'/03001627train.txt', 'r')
@@ -115,7 +127,7 @@ def provide_data(is_train):
         except:
             continue
         else:
-            output_pointcloud[filled, :, :] = h5f['points_on'][0:NUM_POINT, :]
+            output_pointcloud[filled, :, :] = half(h5f['points_on'][:])
             output_probepoint[filled, :, :] = h5f['points_in_out'][0:NUM_PROBE, :]
             output_weight[filled, :] = h5f2['weight'][:]
             #tmp = np.zeros_like(output_label[filled, :])
