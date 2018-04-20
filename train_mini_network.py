@@ -134,12 +134,15 @@ def provide_data(is_train):
         else:
             #output_pointcloud[filled, :, :] = half(h5f['points_on'][:])
             output_pointcloud[filled, :, :] = h5f['points_on'][0:NUM_POINT, :]
-            output_probepoint[filled, :, :] = h5f['points_in_out'][0:NUM_PROBE, :]
+            output_probepoint[filled, 0:(3/4*NUM_PROBE), :] = h5f['points_in_out'][0:(3/4*NUM_PROBE), :]
+            output_probepoint[filled, (3/4*NUM_PROBE):, :] = h5f['points_in_out'][6144:(6144+1/4*NUM_PROBE), :]
             output_weight[filled, :] = h5f2['weight'][:]
-            tmp = np.zeros_like(output_label[filled, :])
-            tmp[h5f['in_out_lable'][:NUM_PROBE]] = 1
+            tmp1 = np.zeros_like(output_label[filled, 0:(3/4*NUM_PROBE)])
+            tmp2 = np.zeros_like(output_label[filled, (3/4*NUM_PROBE):])
+            tmp1[h5f['in_out_lable'][:(3/4*NUM_PROBE)]] = 1
+            tmp2[h5f['in_out_lable'][6144:(6144+1/4*NUM_PROBE)]] = 1
             #tmp = np.less(output_probepoint[filled, :, 0], np.zeros_like(output_probepoint[filled, :, 0]))
-            output_label[filled, :] = tmp.astype(int)
+            output_label[filled, :] = np.concatenate((tmp1.astype(int), tmp2.astype(int)), axis=0)
 
             filled += 1
             h5f.close()
