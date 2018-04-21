@@ -189,6 +189,7 @@ def train():
 
             #correct = tf.equal(tf.argmax(pred, 2), tf.to_int64(labels_pl))
             correct = tf.equal(tf.cast(tf.greater(pred, tf.constant(0.5*np.ones(shape=(BATCH_SIZE, NUM_PROBE)), dtype=np.float32)), tf.int32), labels_pl)
+            ones = tf.reduce_sum(tf.greater(pred, tf.constant(0.5 * np.ones(shape=(BATCH_SIZE, NUM_PROBE)), dtype=np.float32)))
             accuracy = tf.reduce_sum(tf.cast(correct, tf.float32)) / float(BATCH_SIZE) / float(NUM_PROBE)
             tf.summary.scalar('accuracy', accuracy)
 
@@ -234,7 +235,8 @@ def train():
                'merged': merged,
                'step': batch,
                'accuracy': accuracy,
-               'loss_rate': loss_rate}
+               'loss_rate': loss_rate,
+               'ones': ones}
 
         builder = tf.saved_model.builder.SavedModelBuilder(LOG_DIR + '/model_elm_incomplete')
         builder.add_meta_graph_and_variables(sess, 'feature_net')
@@ -296,6 +298,7 @@ def eval_one_epoch(sess, ops, train_writer):
     loss_sum = 0
     acc_sum = 0
     loss_rate_sum = 0
+    ones_sum = 0
     num = 0
     for data in test_generator:
         num += 1
@@ -304,17 +307,19 @@ def eval_one_epoch(sess, ops, train_writer):
                      ops['labels_pl']: data[2],
                      ops['elm_weight_pl']: data[3],
                      ops['is_training_pl']: is_training, }
-        summary, step, _, loss, acc, pred, loss_rate = sess.run([ops['merged'],
-                                                                 ops['step'],
-                                                                 ops['train_op'],
-                                                                 ops['loss'],
-                                                                 ops['accuracy'],
-                                                                 ops['pred'],
-                                                                 ops['loss_rate']],
-                                                                feed_dict = feed_dict)
+        summary, step, _, loss, acc, pred, loss_rate, ones = sess.run([ops['merged'],
+                                                                       ops['step'],
+                                                                       ops['train_op'],
+                                                                       ops['loss'],
+                                                                       ops['accuracy'],
+                                                                       ops['pred'],
+                                                                       ops['loss_rate'],
+                                                                       ops['ones']],
+                                                                      feed_dict = feed_dict)
         loss_rate_sum += loss_rate
         acc_sum += acc
         loss_sum += loss
+        ones_sum += ones/NUM_PROBE
         train_writer.add_summary(summary, step)
         if np.random.rand(1) < 0.01:
             #    print(np.mean(np.mean(np.argmax(pred, axis=2))))
@@ -328,6 +333,7 @@ def eval_one_epoch(sess, ops, train_writer):
     log_string('eval loss: %f' % (loss_sum/num))
     log_string('loss_rate: %f' % (loss_rate_sum/num))
     log_string('eval accuracy: %f' % (acc_sum / num))
+    log_string('eval accuracy: %f' % (ones_sum / num))
 
     return acc_sum / num
 
