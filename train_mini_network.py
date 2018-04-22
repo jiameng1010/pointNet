@@ -171,6 +171,7 @@ def train():
             bn_decay = get_bn_decay(batch)
             tf.summary.scalar('bn_decay', bn_decay)
 
+
             # Get model and loss
             h5f = h5py.File(data_dir + "/03001627/random_weight.h5", 'r')
             random_weights = h5f['randomweight'][:]
