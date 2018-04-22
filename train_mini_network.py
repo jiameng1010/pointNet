@@ -185,7 +185,7 @@ def train():
             rate = 1e-9
             loss = loss1 + rate * tf.reduce_mean(tf.reduce_mean(pred))# - 0.06*tf.reduce_mean(pred)
             tf.summary.scalar('loss', loss)
-            loss_rate = tf.divide(loss1, rate * pred)
+            loss_rate = tf.divide(loss1, rate * tf.reduce_mean(tf.reduce_mean(pred)))
 
             #correct = tf.equal(tf.argmax(pred, 2), tf.to_int64(labels_pl))
             correct = tf.equal(tf.cast(tf.greater(pred, tf.constant(0.5*np.ones(shape=(BATCH_SIZE, NUM_PROBE)), dtype=np.float32)), tf.int32), labels_pl)
