@@ -182,10 +182,10 @@ def train():
             pred = tf.squeeze(pred, axis=2)
             loss1 = tf.reduce_mean(tf.losses.mean_squared_error(labels=labels_pl, predictions=pred))
             loss2 = tf.reduce_mean(tf.losses.mean_squared_error(labels=elm_weight, predictions=pred_elm_weight))
-            rate = 0
-            loss = loss1 + rate * loss2# - 0.06*tf.reduce_mean(pred)
+            rate = 1e-9
+            loss = loss1 + rate * pred# - 0.06*tf.reduce_mean(pred)
             tf.summary.scalar('loss', loss)
-            loss_rate = tf.divide(loss1, rate * loss2)
+            loss_rate = tf.divide(loss1, rate * pred)
 
             #correct = tf.equal(tf.argmax(pred, 2), tf.to_int64(labels_pl))
             correct = tf.equal(tf.cast(tf.greater(pred, tf.constant(0.5*np.ones(shape=(BATCH_SIZE, NUM_PROBE)), dtype=np.float32)), tf.int32), labels_pl)
