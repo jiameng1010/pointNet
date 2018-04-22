@@ -183,7 +183,7 @@ def train():
             loss1 = tf.reduce_mean(tf.losses.mean_squared_error(labels=labels_pl, predictions=pred))
             loss2 = tf.reduce_mean(tf.losses.mean_squared_error(labels=elm_weight, predictions=pred_elm_weight))
             rate = 1e-9
-            loss = loss1 + rate * pred# - 0.06*tf.reduce_mean(pred)
+            loss = loss1 + rate * tf.reduce_mean(tf.reduce_mean(pred))# - 0.06*tf.reduce_mean(pred)
             tf.summary.scalar('loss', loss)
             loss_rate = tf.divide(loss1, rate * pred)
 
