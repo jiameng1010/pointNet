@@ -182,7 +182,7 @@ def train():
             #loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=pred, labels=labels_pl)
             pred = tf.squeeze(pred, axis=2)
             loss1 = tf.reduce_mean(tf.losses.mean_squared_error(labels=labels_pl, predictions=pred))
-            loss2 = 1e-10 * tf.reduce_mean(tf.losses.mean_squared_error(labels=elm_weight, predictions=pred_elm_weight))
+            loss2 = 1e-8 * tf.reduce_mean(tf.losses.mean_squared_error(labels=elm_weight, predictions=pred_elm_weight))
             rate = 1e-1
             loss = loss2 + loss1
             tf.summary.scalar('loss', loss)
@@ -201,7 +201,7 @@ def train():
                 optimizer = tf.train.MomentumOptimizer(learning_rate, momentum=MOMENTUM)
             elif OPTIMIZER == 'adam':
                 optimizer = tf.train.AdamOptimizer(learning_rate)
-            train_op = optimizer.minimize(loss2, global_step=batch)
+            train_op = optimizer.minimize(loss, global_step=batch)
 
             # Add ops to save and restore all the variables.
             saver = tf.train.Saver()
