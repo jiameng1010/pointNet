@@ -38,13 +38,20 @@ def get_model_rbf0(point_cloud, is_training, bn_decay=None):
                                 initializer=tf.constant_initializer(0.2*np.random.randn(1, 1, 3, 1024)),
                                 dtype=tf.float32)
 
-    feature = tf.tile(point_cloud_transformed, [1, 1, 1, 1024])
+    #feature = tf.tile(point_cloud_transformed, [1, 1, 1, 1024])
 
-    bias = tf.tile(centroids, [batch_size, 1024, 1, 1])
+    #bias = tf.tile(centroids, [batch_size, 1024, 1, 1])
 
-    net = tf.subtract(feature, bias)
-    net = tf.norm(net, axis=2, keep_dims=True)
-    net = tf.exp(-net)
+    #net = tf.subtract(feature, bias)
+    #net = tf.exp(-net)
+    #net = tf.norm(net, axis=2, keep_dims=True)
+    p_bs = tf.unstack(point_cloud_transformed)
+    bias = tf.tile(centroids, [1, 1024, 1, 1])
+    outputs = []
+    for i in range(batch_size):
+        outputs.append(tf.subtract(p_bs[i], bias))
+    net = tf.concat(outputs, 0)
+
 
     # Symmetric function: max pooling
     features = tf_util.max_pool2d(net, [num_point,1],
@@ -69,7 +76,7 @@ def get_model_rbf0(point_cloud, is_training, bn_decay=None):
                           scope='dp3')
     net = tf_util.fully_connected(net, 40, activation_fn=None, scope='fc4')
 
-    return net, end_points, features, centroids
+    return net, end_points, features
 
 def get_model_rbf0_gan(point_cloud, is_training, bn_decay=None):
     """ Classification PointNet, input is BxNx3, output Bx40 """
@@ -137,14 +144,14 @@ def get_model_rbf(point_cloud, is_training, bn_decay=None):
     #the per-centroids weights to change the shape of the multi-norm
     weights = tf.get_variable('weights',
                               [1, 1, 4, c1],
-                              initializer=tf.constant_initializer(0.01 * np.random.randn(1, 1, 3, c1)),)
+                              initializer=tf.constant_initializer(0.01 * np.random.randn(1, 1, 4, c1)),)
 
     feature = tf.tile(point_cloud_transformed, [1, 1, 1, c1])
 
     bias = tf.tile(centroids, [batch_size, num_point, 1, 1])
 
     net = tf.subtract(feature, bias)
-    net = tf.exp(net)
+    #net = tf.exp(net)
     net = tf.exp(-tf.concat([tf.norm(net, ord=0.5, axis=2, keep_dims=True),
                              #tf.norm(net, ord=0.8, axis=2, keep_dims=True),
                              tf.norm(net, ord=1, axis=2, keep_dims=True),
@@ -179,7 +186,7 @@ def get_model_rbf(point_cloud, is_training, bn_decay=None):
                           scope='dp2')
     net = tf_util.fully_connected(net, 40, activation_fn=None, scope='fc3')
 
-    return net, end_points, features, centroids
+    return net, end_points, features
 
 def get_model_rbf2(point_cloud, is_training, bn_decay=None):
     """ Classification PointNet, input is BxNx3, output Bx40 """
