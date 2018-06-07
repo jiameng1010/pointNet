@@ -179,17 +179,17 @@ def train():
             net1 = tf.constant(random_weights, dtype=tf.float32)
             #net1 = tf.constant(np.random.normal(size=(3, 3072)), dtype=tf.float32)
             pred, end_points, G_features, pred_elm_weight = MODEL.get_model_field(pointclouds_pl, probe_points_pl, is_training_pl, net1, bn_decay=bn_decay)
-            #loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=pred, labels=labels_pl)
+            loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=pred, labels=labels_pl)
             pred = tf.squeeze(pred, axis=2)
             loss1 = tf.reduce_mean(tf.losses.mean_squared_error(labels=labels_pl, predictions=pred))
             loss2 = 1e-9 * tf.reduce_mean(tf.losses.mean_squared_error(labels=elm_weight, predictions=pred_elm_weight))
             rate = 1e-1
-            loss = loss1
+            #loss = loss1
             tf.summary.scalar('loss', loss)
             loss_rate = tf.divide(loss2, loss1)
 
             #correct = tf.equal(tf.argmax(pred, 2), tf.to_int64(labels_pl))
-            correct = tf.equal(tf.cast(tf.greater(labels_pl, tf.constant(0.5*np.zeros(shape=(BATCH_SIZE, NUM_PROBE)), dtype=np.int32)), tf.int32), labels_pl)
+            correct = tf.equal(tf.cast(tf.greater(pred, tf.constant(0.5*np.zeros(shape=(BATCH_SIZE, NUM_PROBE)), dtype=np.float32)), tf.int32), labels_pl)
             ones = tf.reduce_sum(tf.cast(tf.greater(pred, tf.constant(0.5 * np.zeros(shape=(BATCH_SIZE, NUM_PROBE)), dtype=np.float32)), tf.int32))
             accuracy = tf.reduce_sum(tf.cast(correct, tf.float32)) / float(BATCH_SIZE) / float(NUM_PROBE)
             tf.summary.scalar('accuracy', accuracy)
