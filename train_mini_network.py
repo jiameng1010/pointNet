@@ -189,7 +189,7 @@ def train():
             loss_rate = tf.divide(loss2, loss1)
 
             #correct = tf.equal(tf.argmax(pred, 2), tf.to_int64(labels_pl))
-            correct = tf.equal(tf.cast(tf.greater(labels_pl, tf.constant(0.5*np.zeros(shape=(BATCH_SIZE, NUM_PROBE)), dtype=np.float32)), tf.int32), labels_pl)
+            correct = tf.equal(tf.cast(tf.greater(labels_pl, tf.constant(0.5*np.zeros(shape=(BATCH_SIZE, NUM_PROBE)), dtype=np.int32)), tf.int32), labels_pl)
             ones = tf.reduce_sum(tf.cast(tf.greater(pred, tf.constant(0.5 * np.zeros(shape=(BATCH_SIZE, NUM_PROBE)), dtype=np.float32)), tf.int32))
             accuracy = tf.reduce_sum(tf.cast(correct, tf.float32)) / float(BATCH_SIZE) / float(NUM_PROBE)
             tf.summary.scalar('accuracy', accuracy)
