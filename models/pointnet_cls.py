@@ -618,7 +618,7 @@ def get_model_field(point_cloud, probe_points, is_training, net1, bn_decay=None)
 
 def field_net(input, net1, net2):
     output = tf.matmul(input, net1)
-    output = tf.nn.sigmoid(output)
+    output = tf.sigmoid(output)
     output = tf.matmul(output, net2)
     #output_ch = tf.unstack(output, axis=1)
     #output_ch[0] = tf.expand_dims(tf.add(output_ch[0], tf.subtract(tf.reduce_mean(output_ch[1]), tf.reduce_mean(output_ch[0])) * tf.constant(np.ones((2048), dtype='float32'))), axis=1)

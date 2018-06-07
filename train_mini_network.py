@@ -181,7 +181,7 @@ def train():
             pred, end_points, G_features, pred_elm_weight = MODEL.get_model_field(pointclouds_pl, probe_points_pl, is_training_pl, net1, bn_decay=bn_decay)
             #loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=pred, labels=labels_pl)
             pred = tf.squeeze(pred, axis=2)
-            loss1 = tf.reduce_mean(tf.losses.mean_squared_error(labels=pred, predictions=labels_pl))
+            loss1 = tf.reduce_mean(tf.losses.mean_squared_error(labels=labels_pl, predictions=pred))
             loss2 = 1e-9 * tf.reduce_mean(tf.losses.mean_squared_error(labels=elm_weight, predictions=pred_elm_weight))
             rate = 1e-1
             loss = loss1
