@@ -625,7 +625,7 @@ def field_net(input, net1, net2):
     #output_ch[1] = tf.expand_dims(output_ch[1], axis=1)
     #output = tf.concat(output_ch, axis=1)
 
-    #output = tf.sigmoid(output)
+    output = tf.sigmoid(output)
     return tf.expand_dims(output, axis=0)
 
 def get_loss(pred, label, end_points, reg_weight=0.001):
