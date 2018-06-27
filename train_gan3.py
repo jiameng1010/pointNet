@@ -10,7 +10,7 @@ import os
 import sys
 from tensorflow.python.ops import variable_scope, embedding_ops
 from tensorflow.contrib.gan.python.losses.python import tuple_losses_impl as tfgan_losses
-from tensorflow.contrib.data import Dataset, Iterator
+#from tensorflow.contrib.data import Dataset, Iterator
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -749,7 +749,8 @@ def tester(sess, sess2, ops, train_writer):
         print('%.10f' % np.mean(predDG1[0] - predDG[0]))
         break
 
-
+with tf.Session(graph=tf.Graph()) as sess:
+  tf.saved_model.loader.load(sess, ['train'], '/home/tianming/Documents/CNN-fMRI/Caffe2Tensorflow/memnet/tf_memnet1')
 os.system('cp train_gan3.py %s' % (LOG_DIR))
 if __name__ == "__main__":
     train()
